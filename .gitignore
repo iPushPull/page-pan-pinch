@@ -1,0 +1,27 @@
+.idea
+node_modules
+typings
+
+# Commit only typescript files
+*.map
+*.zip
+
+# Commit JS files for tests - JS files cause less trouble with test-suits
+!test/**/*.js
+
+# Diff configs
+*_diff*
+!*_diff_sample*
+config.json
+
+# Code coverage
+coverage
+
+# V8 Profiling
+v8*
+*heapsnapshot
+
+# NPM Config
+.npmrc
+.npm
+npm-debug.log
