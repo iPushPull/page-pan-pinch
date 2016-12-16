@@ -1,10 +1,10 @@
-class PageTouches {
+class PagePanPinch {
 
     public options: any = {
         bounds: "",
         content: "",
         page: "",
-        onDoubleTap: (pt, ev) => {},
+        onDoubleTap: (pt, ev) => { },
     };
 
     private _bounds: any;
@@ -115,8 +115,8 @@ class PageTouches {
 
     private _eventPanMove = (ev): void => {
 
-        this._pos.x.current = this._pos.x.last + ev.deltaX;
-        this._pos.y.current = this._pos.y.last + ev.deltaY;
+        this._pos.x.current = this._pos.x.last + (ev.deltaX * 1 / this._scale.last);
+        this._pos.y.current = this._pos.y.last + (ev.deltaY * 1 / this._scale.last);
 
         this.setWithinBounds();
         this.update();
@@ -135,7 +135,7 @@ class PageTouches {
     }
 
     private update(): any {
-        this._content.style.transform = "scale(" + (this._scale.current) + ") translate(" + Math.round(this._pos.x.current) + "px," + Math.round(this._pos.y.current) + "px)";
+        this._content.style.transform = "translateZ(0px) scale(" + (this._scale.current) + ") translate(" + Math.round(this._pos.x.current) + "px," + Math.round(this._pos.y.current) + "px)";
     }
 
     private setMinScale(): any {
@@ -149,23 +149,30 @@ class PageTouches {
 
     private setWithinBounds(): void {
 
-        let tableWidth: number = this._pageRect.width * this._scale.current;
-        let tableHeight: number = this._pageRect.height * this._scale.current;
+        let pageWidth: number = this._pageRect.width * this._scale.current;
+        let pageHeight: number = this._pageRect.height * this._scale.current;
 
-        if (tableHeight > this._boundsRect.height && this._pos.y.current < (this._boundsRect.height - tableHeight) * 1 / this._scale.current) {
-            this._pos.y.current = (this._boundsRect.height - tableHeight) * 1 / this._scale.current;
-        } else if (tableHeight < this._boundsRect.height || this._pos.y.current > 0) {
-            this._pos.y.current = 0;
-        } else if (tableHeight < this._boundsRect.height && this._pos.y.current > this._boundsRect.height - tableHeight) {
-            this._pos.y.current = this._boundsRect.height - tableHeight;
+        let maxLeft: number = (pageWidth - this._boundsRect.width) * 1 / this._scale.current;
+        let maxTop: number = (pageHeight - this._boundsRect.height) * 1 / this._scale.current;
+
+        if (pageWidth > this._boundsRect.width) {
+            if (this._pos.x.current < -maxLeft) {
+                this._pos.x.current = -maxLeft;
+            } else if (this._pos.x.current >= 0) {
+                this._pos.x.current = 0;
+            }
+        } else {
+            this._pos.x.current = 0;
         }
 
-        if (tableWidth > this._boundsRect.width && this._pos.x.current < (this._boundsRect.width - tableWidth) * 1 / this._scale.current) {
-            this._pos.x.current = (this._boundsRect.width - tableWidth) * 1 / this._scale.current;
-        } else if (tableWidth < this._boundsRect.width || this._pos.x.current > 0) {
-            this._pos.x.current = 0;
-        } else if (this._pos.x.current < this._boundsRect.width - tableWidth) {
-            this._pos.x.current = this._boundsRect.width - tableWidth;
+        if (pageHeight > this._boundsRect.height) {
+            if (this._pos.y.current < -maxTop) {
+                this._pos.y.current = -maxTop;
+            } else if (pageHeight < this._boundsRect.height || this._pos.y.current >= 0) {
+                this._pos.y.current = 0;
+            }
+        } else {
+            this._pos.y.current = 0;
         }
 
     }

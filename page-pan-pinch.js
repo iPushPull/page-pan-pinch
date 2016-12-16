@@ -1,5 +1,5 @@
-var PageTouches = (function () {
-    function PageTouches(options) {
+var PagePanPinch = (function () {
+    function PagePanPinch(options) {
         var _this = this;
         this.options = {
             bounds: "",
@@ -45,8 +45,8 @@ var PageTouches = (function () {
             return;
         };
         this._eventPanMove = function (ev) {
-            _this._pos.x.current = _this._pos.x.last + ev.deltaX;
-            _this._pos.y.current = _this._pos.y.last + ev.deltaY;
+            _this._pos.x.current = _this._pos.x.last + (ev.deltaX * 1 / _this._scale.last);
+            _this._pos.y.current = _this._pos.y.last + (ev.deltaY * 1 / _this._scale.last);
             _this.setWithinBounds();
             _this.update();
         };
@@ -92,40 +92,46 @@ var PageTouches = (function () {
         });
         this.init();
     }
-    PageTouches.prototype.init = function () {
+    PagePanPinch.prototype.init = function () {
         this.setMinScale();
         this.update();
     };
-    PageTouches.prototype.update = function () {
-        this._content.style.transform = "scale(" + (this._scale.current) + ") translate(" + Math.round(this._pos.x.current) + "px," + Math.round(this._pos.y.current) + "px)";
+    PagePanPinch.prototype.update = function () {
+        this._content.style.transform = "translateZ(0px) scale(" + (this._scale.current) + ") translate(" + Math.round(this._pos.x.current) + "px," + Math.round(this._pos.y.current) + "px)";
     };
-    PageTouches.prototype.setMinScale = function () {
+    PagePanPinch.prototype.setMinScale = function () {
         this._scale.last = this._scale.current = this._boundsRect.width / this._pageRect.width;
         var hScale = this._boundsRect.height / this._pageRect.height;
         this._scale.min = hScale < this._scale.last ? hScale : this._scale.current;
     };
-    PageTouches.prototype.setWithinBounds = function () {
-        var tableWidth = this._pageRect.width * this._scale.current;
-        var tableHeight = this._pageRect.height * this._scale.current;
-        if (tableHeight > this._boundsRect.height && this._pos.y.current < (this._boundsRect.height - tableHeight) * 1 / this._scale.current) {
-            this._pos.y.current = (this._boundsRect.height - tableHeight) * 1 / this._scale.current;
+    PagePanPinch.prototype.setWithinBounds = function () {
+        var pageWidth = this._pageRect.width * this._scale.current;
+        var pageHeight = this._pageRect.height * this._scale.current;
+        var maxLeft = (pageWidth - this._boundsRect.width) * 1 / this._scale.current;
+        var maxTop = (pageHeight - this._boundsRect.height) * 1 / this._scale.current;
+        if (pageWidth > this._boundsRect.width) {
+            if (this._pos.x.current < -maxLeft) {
+                this._pos.x.current = -maxLeft;
+            }
+            else if (this._pos.x.current >= 0) {
+                this._pos.x.current = 0;
+            }
         }
-        else if (tableHeight < this._boundsRect.height || this._pos.y.current > 0) {
-            this._pos.y.current = 0;
-        }
-        else if (tableHeight < this._boundsRect.height && this._pos.y.current > this._boundsRect.height - tableHeight) {
-            this._pos.y.current = this._boundsRect.height - tableHeight;
-        }
-        if (tableWidth > this._boundsRect.width && this._pos.x.current < (this._boundsRect.width - tableWidth) * 1 / this._scale.current) {
-            this._pos.x.current = (this._boundsRect.width - tableWidth) * 1 / this._scale.current;
-        }
-        else if (tableWidth < this._boundsRect.width || this._pos.x.current > 0) {
+        else {
             this._pos.x.current = 0;
         }
-        else if (this._pos.x.current < this._boundsRect.width - tableWidth) {
-            this._pos.x.current = this._boundsRect.width - tableWidth;
+        if (pageHeight > this._boundsRect.height) {
+            if (this._pos.y.current < -maxTop) {
+                this._pos.y.current = -maxTop;
+            }
+            else if (pageHeight < this._boundsRect.height || this._pos.y.current >= 0) {
+                this._pos.y.current = 0;
+            }
+        }
+        else {
+            this._pos.y.current = 0;
         }
     };
-    return PageTouches;
+    return PagePanPinch;
 }());
 //# sourceMappingURL=page-pan-pinch.js.map
