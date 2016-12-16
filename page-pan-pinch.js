@@ -5,23 +5,23 @@ var PagePanPinch = (function () {
             bounds: "",
             content: "",
             page: "",
-            onDoubleTap: function (pt, ev) { },
+            onDoubleTap: function (pt, ev) { }
         };
         this._scale = {
             last: 1,
             current: 1,
             min: .5,
-            max: 2,
+            max: 2
         };
         this._pos = {
             x: {
                 last: 0,
-                current: 0,
+                current: 0
             },
             y: {
                 last: 0,
-                current: 0,
-            },
+                current: 0
+            }
         };
         this._eventPinchMove = function (ev) {
             _this._scale.current = _this._scale.last * ev.scale;
@@ -43,6 +43,9 @@ var PagePanPinch = (function () {
                 _this.options.onDoubleTap(_this, ev);
             }
             return;
+        };
+        this._eventPanStart = function (ev) {
+            console.log("pan start");
         };
         this._eventPanMove = function (ev) {
             _this._pos.x.current = _this._pos.x.last + (ev.deltaX * 1 / _this._scale.last);
@@ -71,18 +74,20 @@ var PagePanPinch = (function () {
         this._boundsRect = this._bounds.getBoundingClientRect();
         this._pageRect = this._page.getBoundingClientRect();
         this._mc = new Hammer(this._bounds);
-        var pan = new Hammer.Pan({ direction: Hammer.DIRECTION_ALL });
         var pinch = new Hammer.Pinch();
         var tap = new Hammer.Tap({ event: "singletap" });
         var doubleTap = new Hammer.Tap({ event: "doubletap", taps: 2 });
         doubleTap.recognizeWith(tap);
-        this._mc.add([pinch, pan, doubleTap]);
+        this._mc.add([pinch, doubleTap]);
         this._mc.on("pinchmove", this._eventPinchMove);
         this._mc.on("pinchend", function (ev) {
             _this._eventPinchEnd(ev);
         });
         this._mc.on("tap", function (ev) {
             _this._eventTap(ev);
+        });
+        this._mc.on("panstart", function (ev) {
+            _this._eventPanStart(ev);
         });
         this._mc.on("panmove", function (ev) {
             _this._eventPanMove(ev);
@@ -93,16 +98,20 @@ var PagePanPinch = (function () {
         this.init();
     }
     PagePanPinch.prototype.init = function () {
-        this.setMinScale();
+        this.setMaxMinScale();
         this.update();
     };
     PagePanPinch.prototype.update = function () {
         this._content.style.transform = "translateZ(0px) scale(" + (this._scale.current) + ") translate(" + Math.round(this._pos.x.current) + "px," + Math.round(this._pos.y.current) + "px)";
     };
-    PagePanPinch.prototype.setMinScale = function () {
+    PagePanPinch.prototype.setMaxMinScale = function () {
         this._scale.last = this._scale.current = this._boundsRect.width / this._pageRect.width;
         var hScale = this._boundsRect.height / this._pageRect.height;
         this._scale.min = hScale < this._scale.last ? hScale : this._scale.current;
+        var vScale = this._boundsRect.width / this._pageRect.width;
+        if (this._scale.max < vScale) {
+            this._scale.max = vScale;
+        }
     };
     PagePanPinch.prototype.setWithinBounds = function () {
         var pageWidth = this._pageRect.width * this._scale.current;

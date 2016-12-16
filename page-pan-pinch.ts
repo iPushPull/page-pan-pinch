@@ -4,7 +4,7 @@ class PagePanPinch {
         bounds: "",
         content: "",
         page: "",
-        onDoubleTap: (pt, ev) => { },
+        onDoubleTap: (pt, ev) => { }
     };
 
     private _bounds: any;
@@ -17,18 +17,18 @@ class PagePanPinch {
         last: 1,
         current: 1,
         min: .5,
-        max: 2,
+        max: 2
     };
 
     private _pos: any = {
         x: {
             last: 0,
-            current: 0,
+            current: 0
         },
         y: {
             last: 0,
-            current: 0,
-        },
+            current: 0
+        }
     };
 
     // Hammer Libary
@@ -61,14 +61,14 @@ class PagePanPinch {
 
         // touch library
         this._mc = new Hammer(this._bounds);
-        let pan: any = new Hammer.Pan({ direction: Hammer.DIRECTION_ALL });
+        // let pan: any = new Hammer.Pan({ direction: Hammer.DIRECTION_ALL });
         let pinch: any = new Hammer.Pinch();
         let tap: any = new Hammer.Tap({ event: "singletap" });
         let doubleTap: any = new Hammer.Tap({ event: "doubletap", taps: 2 });
         doubleTap.recognizeWith(tap);
 
         // add events
-        this._mc.add([pinch, pan, doubleTap]);
+        this._mc.add([pinch, doubleTap]);
 
         // event listeners
         this._mc.on("pinchmove", this._eventPinchMove);
@@ -77,6 +77,9 @@ class PagePanPinch {
         });
         this._mc.on("tap", (ev) => {
             this._eventTap(ev);
+        });
+        this._mc.on("panstart", (ev) => {
+            this._eventPanStart(ev);
         });
         this._mc.on("panmove", (ev) => {
             this._eventPanMove(ev);
@@ -113,7 +116,11 @@ class PagePanPinch {
         return;
     };
 
-    private _eventPanMove = (ev): void => {
+    private _eventPanStart = (ev: any): void => {
+        console.log("pan start");
+    };
+
+    private _eventPanMove = (ev: any): void => {
 
         this._pos.x.current = this._pos.x.last + (ev.deltaX * 1 / this._scale.last);
         this._pos.y.current = this._pos.y.last + (ev.deltaY * 1 / this._scale.last);
@@ -130,7 +137,7 @@ class PagePanPinch {
     };
 
     private init(): any {
-        this.setMinScale();
+        this.setMaxMinScale();
         this.update();
     }
 
@@ -138,12 +145,17 @@ class PagePanPinch {
         this._content.style.transform = "translateZ(0px) scale(" + (this._scale.current) + ") translate(" + Math.round(this._pos.x.current) + "px," + Math.round(this._pos.y.current) + "px)";
     }
 
-    private setMinScale(): any {
+    private setMaxMinScale(): any {
 
         this._scale.last = this._scale.current = this._boundsRect.width / this._pageRect.width;
 
         let hScale: number = this._boundsRect.height / this._pageRect.height;
         this._scale.min = hScale < this._scale.last ? hScale : this._scale.current;
+
+        let vScale: number = this._boundsRect.width / this._pageRect.width;
+        if (this._scale.max < vScale) {
+            this._scale.max = vScale;
+        }
 
     }
 
