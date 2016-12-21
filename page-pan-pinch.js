@@ -96,13 +96,7 @@ var PagePanPinch = (function () {
         if (!this._bounds || !this._contentScroll || !this._contentZoom || !this._page) {
             throw "DOM Elements undefined";
         }
-        this._boundsRect = this._bounds.getBoundingClientRect();
-        this._pageRect = this._page.getBoundingClientRect();
-        this._bounds.style.overflow = "hidden";
-        this._contentScroll.style.transformOrigin = "0 0";
-        this._contentScroll.style.width = this._pageRect.width + "px";
-        this._contentScroll.style.height = this._pageRect.height + "px";
-        this._contentZoom.style.transformOrigin = "50% 50%";
+        this.setupContainers();
         this.setupTouch();
         this.init(true);
     }
@@ -112,9 +106,16 @@ var PagePanPinch = (function () {
         this.update();
     };
     PagePanPinch.prototype.refresh = function () {
-        this._boundsRect = this._bounds.getBoundingClientRect();
+        this.setupContainers();
         this.setupTouch();
         this.init(false);
+    };
+    PagePanPinch.prototype.setupContainers = function () {
+        this._bounds.style.overflow = "hidden";
+        this._contentScroll.style.transformOrigin = "0 0";
+        this._contentScroll.style.width = this._page.clientWidth + "px";
+        this._contentScroll.style.height = this._page.clientHeight + "px";
+        this._contentZoom.style.transformOrigin = "50% 50%";
     };
     PagePanPinch.prototype.setupTouch = function () {
         if (this._mc) {
@@ -154,8 +155,8 @@ var PagePanPinch = (function () {
         }
     };
     PagePanPinch.prototype.update = function () {
-        var width = Math.round(this._pageRect.width * this._scale.last);
-        var height = Math.round(this._pageRect.height * this._scale.last);
+        var width = Math.round(this._page.clientWidth * this._scale.current);
+        var height = Math.round(this._page.clientHeight * this._scale.current);
         var x = Math.round(this._pos.x.current);
         var y = Math.round(this._pos.y.current);
         this._contentScroll.style.transform = "translateZ(0px) translate(" + x + "px, " + y + "px)";
@@ -165,24 +166,30 @@ var PagePanPinch = (function () {
         }
     };
     PagePanPinch.prototype.setMaxMinScale = function (scale) {
+        var scaleWidth = this._bounds.clientWidth / this._page.clientWidth;
         if (scale) {
-            this._scale.last = this._scale.current = this._boundsRect.width / this._pageRect.width;
+            this._scale.last = this._scale.current = scaleWidth;
         }
-        var hScale = this._boundsRect.height / this._pageRect.height;
-        this._scale.min = hScale < this._scale.last ? hScale : this._scale.current;
-        var vScale = this._boundsRect.width / this._pageRect.width;
-        if (this._scale.max < vScale) {
-            this._scale.max = vScale;
+        this._scale.min = scaleWidth;
+        if (scaleWidth < 1) {
+            this._scale.max = 2;
+        }
+        else {
+            this._scale.max = scaleWidth * 2;
         }
     };
     PagePanPinch.prototype.setWithinBounds = function () {
-        var pageWidth = this._pageRect.width * this._scale.current;
-        var pageHeight = this._pageRect.height * this._scale.current;
-        var maxLeft = (pageWidth - this._pageRect.width) / 2 + (this._pageRect.width - this._boundsRect.width);
-        var maxTop = (pageHeight - this._pageRect.height) / 2 + (this._pageRect.height - this._boundsRect.height);
-        var minLeft = (pageWidth - this._pageRect.width) / 2;
-        var minTop = (pageHeight - this._pageRect.height) / 2;
-        if (pageWidth > this._boundsRect.width) {
+        var pageWidth = this._page.clientWidth * this._scale.current;
+        var pageHeight = this._page.clientHeight * this._scale.current;
+        var maxLeft = (pageWidth - this._page.clientWidth) / 2 + (this._page.clientWidth - this._bounds.clientWidth);
+        var maxTop = (pageHeight - this._page.clientHeight) / 2 + (this._page.clientHeight - this._bounds.clientHeight);
+        var minLeft = (pageWidth - this._page.clientWidth) / 2;
+        var minTop = (pageHeight - this._page.clientHeight) / 2;
+        this._pos.x.max = maxLeft;
+        this._pos.x.min = minLeft;
+        this._pos.y.max = maxTop;
+        this._pos.y.min = minTop;
+        if (pageWidth > this._bounds.clientWidth) {
             if (this._pos.x.current < -maxLeft) {
                 this._pos.x.current = -maxLeft;
             }
@@ -193,7 +200,7 @@ var PagePanPinch = (function () {
         else {
             this._pos.x.current = minLeft;
         }
-        if (pageHeight > this._boundsRect.height) {
+        if (pageHeight > this._bounds.clientHeight) {
             if (this._pos.y.current < -maxTop) {
                 this._pos.y.current = -maxTop;
             }
