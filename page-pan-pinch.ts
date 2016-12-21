@@ -113,9 +113,11 @@ class PagePanPinch {
         this._mc = new Hammer(this._bounds);
         // let swipe: any = new Hammer.Swipe();
         let pan: any = new Hammer.Pan();
-        let tap: any = new Hammer.Tap();
+        let tap: any = new Hammer.Tap({event: "singletap"});
+        let doubleTap: any = new Hammer.Tap({event: "doubletap", taps: 2});
+        doubleTap.recognizeWith(tap);
         let pinch: any = new Hammer.Pinch();
-        this._mc.add([pan, tap, pinch]);
+        this._mc.add([pan, doubleTap, pinch]);
 
         // event listeners
         // this._mc.on("swipeleft", this._eventSwipe);

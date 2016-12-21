@@ -125,9 +125,11 @@ var PagePanPinch = (function () {
         }
         this._mc = new Hammer(this._bounds);
         var pan = new Hammer.Pan();
-        var tap = new Hammer.Tap();
+        var tap = new Hammer.Tap({ event: "singletap" });
+        var doubleTap = new Hammer.Tap({ event: "doubletap", taps: 2 });
+        doubleTap.recognizeWith(tap);
         var pinch = new Hammer.Pinch();
-        this._mc.add([pan, tap, pinch]);
+        this._mc.add([pan, doubleTap, pinch]);
         this._mc.on("pinchstart", this._eventPinchStart);
         this._mc.on("pinchmove", this._eventPinchMove);
         this._mc.on("pinchend", this._eventPinchEnd);
