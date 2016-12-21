@@ -6,8 +6,10 @@ class PagePanPinch {
         contentZoom: "",
         page: "",
         debug: "",
+        zoomIncrements: .25,
         onTap: (pt, ev) => { },
         onDoubleTap: (pt, ev) => { }
+        // onSwipe: (pt, ev, direction) => { }
     };
 
     private _bounds: any;
@@ -76,7 +78,6 @@ class PagePanPinch {
 
     public init(scale: boolean): void {
         this.setMaxMinScale(scale);
-        this.setWithinBounds();
         this.update();
     }
 
@@ -84,6 +85,16 @@ class PagePanPinch {
         this.setupContainers();
         this.setupTouch();
         this.init(false);
+    }
+
+    public zoom(direction: string): void {
+        if (direction === "in") {
+            this._scale.current += this.options.zoomIncrements;
+        } else {
+            this._scale.current -= this.options.zoomIncrements;
+        }
+        this._scale.last = this._scale.current;
+        this.update();
     }
 
     private setupContainers(): void {
@@ -100,16 +111,15 @@ class PagePanPinch {
         }
         // touch library
         this._mc = new Hammer(this._bounds);
-        let pan: any = new Hammer.Pan({ direction: Hammer.DIRECTION_ALL });
+        // let swipe: any = new Hammer.Swipe();
+        let pan: any = new Hammer.Pan();
+        let tap: any = new Hammer.Tap();
         let pinch: any = new Hammer.Pinch();
-        let tap: any = new Hammer.Tap({ event: "singletap" });
-        let doubleTap: any = new Hammer.Tap({ event: "doubletap", taps: 2 });
-        doubleTap.recognizeWith(tap);
-
-        // add events
-        this._mc.add([pan, pinch, doubleTap]);
+        this._mc.add([pan, tap, pinch]);
 
         // event listeners
+        // this._mc.on("swipeleft", this._eventSwipe);
+        // this._mc.on("swiperight", this._eventSwipe);
         this._mc.on("pinchstart", this._eventPinchStart);
         this._mc.on("pinchmove", this._eventPinchMove);
         this._mc.on("pinchend", this._eventPinchEnd);
@@ -119,24 +129,21 @@ class PagePanPinch {
         this._mc.on("panend", this._eventPanEnd);
     }
 
+    // private _eventSwipe = (ev: any): void => {
+    //     this.options.onSwipe(this, ev, ev.velocityX > 0 ? "right" : "left" );
+    // };
+
     private _eventPinchStart = (ev: any): void => {
         this.clearPanTimer();
     };
 
     private _eventPinchMove = (ev: any): void => {
         this._scale.current = this._scale.last * ev.scale;
-        if (this._scale.current > this._scale.max) {
-            this._scale.current = this._scale.max;
-        }
-        if (this._scale.current < this._scale.min) {
-            this._scale.current = this._scale.min;
-        }
         this.update();
     };
 
     private _eventPinchEnd = (ev: any): void => {
         this._scale.last = this._scale.current;
-        this.setWithinBounds();
         this.update();
     };
 
@@ -158,7 +165,6 @@ class PagePanPinch {
         this._pos.x.current = this._pos.x.last + (ev.deltaX);
         this._pos.y.current = this._pos.y.last + (ev.deltaY);
 
-        this.setWithinBounds();
         this.update();
     };
 
@@ -189,7 +195,6 @@ class PagePanPinch {
         this._pos.y.last = this._pos.y.current;
         this._pos.x.delta *= this._pos.friction;
         this._pos.y.delta *= this._pos.friction;
-        this.setWithinBounds();
         this.update();
         if (Math.abs(this._pos.x.delta) < .01 && Math.abs(this._pos.y.delta) < .01) {
             clearInterval(this._panTimer);
@@ -199,8 +204,7 @@ class PagePanPinch {
 
     private update(): any {
 
-        let width: number = Math.round(this._page.clientWidth * this._scale.current);
-        let height: number = Math.round(this._page.clientHeight * this._scale.current);
+        this.setWithinBounds();
 
         let x: number = Math.round(this._pos.x.current);
         let y: number = Math.round(this._pos.y.current);
@@ -208,9 +212,6 @@ class PagePanPinch {
         this._contentScroll.style.transform = `translateZ(0px) translate(${x}px, ${y}px)`;
         this._contentZoom.style.transform = `translateZ(0px) scale(${this._scale.current})`;
 
-        if (this._debug) {
-            this._debug.innerHTML = `x: ${x}, y: ${y}, width: ${width}, height: ${height}, scale: ${this._scale.last}`;
-        }
     }
 
     private setMaxMinScale(scale: boolean): void {
@@ -234,6 +235,15 @@ class PagePanPinch {
 
     private setWithinBounds(): void {
 
+        // contain scale
+        if (this._scale.current > this._scale.max) {
+            this._scale.current = this._scale.max;
+        }
+        if (this._scale.current < this._scale.min) {
+            this._scale.current = this._scale.min;
+        }
+
+        // set translate boundaries
         let pageWidth: number = this._page.clientWidth * this._scale.current;
         let pageHeight: number = this._page.clientHeight * this._scale.current;
 
@@ -266,6 +276,11 @@ class PagePanPinch {
             }
         } else {
             this._pos.y.current = minTop;
+        }
+
+        // debug
+        if (this._debug) {
+            this._debug.innerHTML = `x: ${this._pos.x.current}, y: ${this._pos.y.current}, width: ${pageWidth}, height: ${pageHeight}, scale: ${this._scale.last}`;
         }
 
     }
