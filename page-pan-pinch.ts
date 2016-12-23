@@ -1,5 +1,7 @@
 class PagePanPinch {
 
+    public version: string = "0.14";
+
     public options: any = {
         bounds: "",
         contentScroll: "",
@@ -22,7 +24,9 @@ class PagePanPinch {
         last: 1,
         current: 1,
         min: .5,
-        max: 2
+        max: 2,
+        width: 0,
+        height: 0
     };
 
     private _pos: any = {
@@ -98,11 +102,11 @@ class PagePanPinch {
     }
 
     private setupContainers(): void {
-        this._bounds.style.overflow = "hidden";
-        this._contentScroll.style.transformOrigin = "0 0";
+        // this._bounds.style.overflow = "hidden";
+        this._contentZoom.style.transformOrigin = "0 0";
         this._contentScroll.style.width = `${this._page.clientWidth}px`;
         this._contentScroll.style.height = `${this._page.clientHeight}px`;
-        this._contentZoom.style.transformOrigin = "50% 50%";
+        this._contentZoom.style.transformOrigin = "0 0";
     }
 
     private setupTouch(): void {
@@ -113,15 +117,13 @@ class PagePanPinch {
         this._mc = new Hammer(this._bounds);
         // let swipe: any = new Hammer.Swipe();
         let pan: any = new Hammer.Pan();
-        let tap: any = new Hammer.Tap({event: "singletap"});
-        let doubleTap: any = new Hammer.Tap({event: "doubletap", taps: 2});
+        let tap: any = new Hammer.Tap({ event: "singletap" });
+        let doubleTap: any = new Hammer.Tap({ event: "doubletap", taps: 2 });
         doubleTap.recognizeWith(tap);
         let pinch: any = new Hammer.Pinch();
         this._mc.add([pan, doubleTap, pinch]);
 
         // event listeners
-        // this._mc.on("swipeleft", this._eventSwipe);
-        // this._mc.on("swiperight", this._eventSwipe);
         this._mc.on("pinchstart", this._eventPinchStart);
         this._mc.on("pinchmove", this._eventPinchMove);
         this._mc.on("pinchend", this._eventPinchEnd);
@@ -129,6 +131,7 @@ class PagePanPinch {
         this._mc.on("panstart", this._eventPanStart);
         this._mc.on("panmove", this._eventPanMove);
         this._mc.on("panend", this._eventPanEnd);
+
     }
 
     // private _eventSwipe = (ev: any): void => {
@@ -136,7 +139,7 @@ class PagePanPinch {
     // };
 
     private _eventPinchStart = (ev: any): void => {
-        this.clearPanTimer();
+        this._clearPanTimer();
     };
 
     private _eventPinchMove = (ev: any): void => {
@@ -147,6 +150,8 @@ class PagePanPinch {
     private _eventPinchEnd = (ev: any): void => {
         this._scale.last = this._scale.current;
         this.update();
+        this._contentScroll.style.width = `${this._scale.width}px`;
+        this._contentScroll.style.height = `${this._scale.height}px`;
     };
 
     private _eventTap = (ev: any): void => {
@@ -159,24 +164,22 @@ class PagePanPinch {
     };
 
     private _eventPanStart = (ev: any): void => {
-        this.clearPanTimer();
+        this._clearPanTimer();
     };
 
     private _eventPanMove = (ev: any): void => {
-
-        this._pos.x.current = this._pos.x.last + (ev.deltaX);
-        this._pos.y.current = this._pos.y.last + (ev.deltaY);
-
+        this._pos.x.current = this._pos.x.last + (ev.deltaX * -1);
+        this._pos.y.current = this._pos.y.last + (ev.deltaY * -1);
         this.update();
     };
 
     private _eventPanEnd = (ev: any): void => {
         this._pos.x.last = this._pos.x.current;
         this._pos.y.last = this._pos.y.current;
-        this._pos.x.vel = ev.velocityX;
-        this._pos.y.vel = ev.velocityY;
-        this._pos.x.delta = ev.deltaX;
-        this._pos.y.delta = ev.deltaY;
+        this._pos.x.vel = ev.velocityX * -1;
+        this._pos.y.vel = ev.velocityY * -1;
+        this._pos.x.delta = ev.deltaX * -1;
+        this._pos.y.delta = ev.deltaY * -1;
         if (Math.abs(ev.velocity) > .2) {
             this._panTimer = setInterval(() => {
                 this.updatePanVel();
@@ -184,7 +187,7 @@ class PagePanPinch {
         }
     };
 
-    private clearPanTimer(): void {
+    private _clearPanTimer(): void {
         if (this._panTimer) {
             clearInterval(this._panTimer);
         }
@@ -208,10 +211,14 @@ class PagePanPinch {
 
         this.setWithinBounds();
 
-        let x: number = Math.round(this._pos.x.current);
-        let y: number = Math.round(this._pos.y.current);
+        // let x: number = Math.round(this._pos.x.current * this._scale.current);
+        // let y: number = Math.round(this._pos.y.current * this._scale.current);
 
-        this._contentScroll.style.transform = `translateZ(0px) translate(${x}px, ${y}px)`;
+        this._bounds.scrollLeft = this._pos.x.current;
+        this._bounds.scrollTop = this._pos.y.current;
+
+
+
         this._contentZoom.style.transform = `translateZ(0px) scale(${this._scale.current})`;
 
     }
@@ -247,13 +254,16 @@ class PagePanPinch {
 
         // set translate boundaries
         let pageWidth: number = this._page.clientWidth * this._scale.current;
-        let pageHeight: number = this._page.clientHeight * this._scale.current;
+        let pageHeight: number = this._page.clientHeight * this._scale.current;  
 
-        let maxLeft: number = (pageWidth - this._page.clientWidth) / 2 + (this._page.clientWidth - this._bounds.clientWidth);
-        let maxTop: number = (pageHeight - this._page.clientHeight) / 2 + (this._page.clientHeight - this._bounds.clientHeight);
+        this._scale.width = pageWidth;   
+        this._scale.height = pageHeight;   
 
-        let minLeft: number = (pageWidth - this._page.clientWidth) / 2;
-        let minTop: number = (pageHeight - this._page.clientHeight) / 2;
+        let maxLeft: number = pageWidth - this._bounds.clientWidth;
+        let maxTop: number = pageHeight - this._bounds.clientHeight;
+
+        let minLeft: number = 0; // (pageWidth - this._bounds.clientWidth) / 2;
+        let minTop: number = 0; // (pageHeight - this._bounds.clientHeight) / 2;
 
         this._pos.x.max = maxLeft;
         this._pos.x.min = minLeft;
@@ -261,9 +271,9 @@ class PagePanPinch {
         this._pos.y.min = minTop;
 
         if (pageWidth > this._bounds.clientWidth) {
-            if (this._pos.x.current < -maxLeft) {
-                this._pos.x.current = -maxLeft;
-            } else if (this._pos.x.current >= minLeft) {
+            if (this._pos.x.current > maxLeft) {
+                this._pos.x.current = maxLeft;
+            } else if (this._pos.x.current < minLeft) {
                 this._pos.x.current = minLeft;
             }
         } else {
@@ -271,9 +281,9 @@ class PagePanPinch {
         }
 
         if (pageHeight > this._bounds.clientHeight) {
-            if (this._pos.y.current < -maxTop) {
-                this._pos.y.current = -maxTop;
-            } else if (this._pos.y.current >= minTop) {
+            if (this._pos.y.current > maxTop) {
+                this._pos.y.current = maxTop;
+            } else if (this._pos.y.current < minTop) {
                 this._pos.y.current = minTop;
             }
         } else {

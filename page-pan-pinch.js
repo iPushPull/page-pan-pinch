@@ -1,6 +1,7 @@
 var PagePanPinch = (function () {
     function PagePanPinch(options) {
         var _this = this;
+        this.version = "0.14";
         this.options = {
             bounds: "",
             contentScroll: "",
@@ -15,7 +16,9 @@ var PagePanPinch = (function () {
             last: 1,
             current: 1,
             min: .5,
-            max: 2
+            max: 2,
+            width: 0,
+            height: 0
         };
         this._pos = {
             friction: .9,
@@ -33,7 +36,7 @@ var PagePanPinch = (function () {
             }
         };
         this._eventPinchStart = function (ev) {
-            _this.clearPanTimer();
+            _this._clearPanTimer();
         };
         this._eventPinchMove = function (ev) {
             _this._scale.current = _this._scale.last * ev.scale;
@@ -42,6 +45,8 @@ var PagePanPinch = (function () {
         this._eventPinchEnd = function (ev) {
             _this._scale.last = _this._scale.current;
             _this.update();
+            _this._contentScroll.style.width = _this._scale.width + "px";
+            _this._contentScroll.style.height = _this._scale.height + "px";
         };
         this._eventTap = function (ev) {
             if (ev.tapCount === 1) {
@@ -53,20 +58,20 @@ var PagePanPinch = (function () {
             return;
         };
         this._eventPanStart = function (ev) {
-            _this.clearPanTimer();
+            _this._clearPanTimer();
         };
         this._eventPanMove = function (ev) {
-            _this._pos.x.current = _this._pos.x.last + (ev.deltaX);
-            _this._pos.y.current = _this._pos.y.last + (ev.deltaY);
+            _this._pos.x.current = _this._pos.x.last + (ev.deltaX * -1);
+            _this._pos.y.current = _this._pos.y.last + (ev.deltaY * -1);
             _this.update();
         };
         this._eventPanEnd = function (ev) {
             _this._pos.x.last = _this._pos.x.current;
             _this._pos.y.last = _this._pos.y.current;
-            _this._pos.x.vel = ev.velocityX;
-            _this._pos.y.vel = ev.velocityY;
-            _this._pos.x.delta = ev.deltaX;
-            _this._pos.y.delta = ev.deltaY;
+            _this._pos.x.vel = ev.velocityX * -1;
+            _this._pos.y.vel = ev.velocityY * -1;
+            _this._pos.x.delta = ev.deltaX * -1;
+            _this._pos.y.delta = ev.deltaY * -1;
             if (Math.abs(ev.velocity) > .2) {
                 _this._panTimer = setInterval(function () {
                     _this.updatePanVel();
@@ -113,11 +118,10 @@ var PagePanPinch = (function () {
         this.update();
     };
     PagePanPinch.prototype.setupContainers = function () {
-        this._bounds.style.overflow = "hidden";
-        this._contentScroll.style.transformOrigin = "0 0";
+        this._contentZoom.style.transformOrigin = "0 0";
         this._contentScroll.style.width = this._page.clientWidth + "px";
         this._contentScroll.style.height = this._page.clientHeight + "px";
-        this._contentZoom.style.transformOrigin = "50% 50%";
+        this._contentZoom.style.transformOrigin = "0 0";
     };
     PagePanPinch.prototype.setupTouch = function () {
         if (this._mc) {
@@ -138,7 +142,7 @@ var PagePanPinch = (function () {
         this._mc.on("panmove", this._eventPanMove);
         this._mc.on("panend", this._eventPanEnd);
     };
-    PagePanPinch.prototype.clearPanTimer = function () {
+    PagePanPinch.prototype._clearPanTimer = function () {
         if (this._panTimer) {
             clearInterval(this._panTimer);
         }
@@ -157,9 +161,8 @@ var PagePanPinch = (function () {
     };
     PagePanPinch.prototype.update = function () {
         this.setWithinBounds();
-        var x = Math.round(this._pos.x.current);
-        var y = Math.round(this._pos.y.current);
-        this._contentScroll.style.transform = "translateZ(0px) translate(" + x + "px, " + y + "px)";
+        this._bounds.scrollLeft = this._pos.x.current;
+        this._bounds.scrollTop = this._pos.y.current;
         this._contentZoom.style.transform = "translateZ(0px) scale(" + this._scale.current + ")";
     };
     PagePanPinch.prototype.setMaxMinScale = function (scale) {
@@ -184,19 +187,21 @@ var PagePanPinch = (function () {
         }
         var pageWidth = this._page.clientWidth * this._scale.current;
         var pageHeight = this._page.clientHeight * this._scale.current;
-        var maxLeft = (pageWidth - this._page.clientWidth) / 2 + (this._page.clientWidth - this._bounds.clientWidth);
-        var maxTop = (pageHeight - this._page.clientHeight) / 2 + (this._page.clientHeight - this._bounds.clientHeight);
-        var minLeft = (pageWidth - this._page.clientWidth) / 2;
-        var minTop = (pageHeight - this._page.clientHeight) / 2;
+        this._scale.width = pageWidth;
+        this._scale.height = pageHeight;
+        var maxLeft = pageWidth - this._bounds.clientWidth;
+        var maxTop = pageHeight - this._bounds.clientHeight;
+        var minLeft = 0;
+        var minTop = 0;
         this._pos.x.max = maxLeft;
         this._pos.x.min = minLeft;
         this._pos.y.max = maxTop;
         this._pos.y.min = minTop;
         if (pageWidth > this._bounds.clientWidth) {
-            if (this._pos.x.current < -maxLeft) {
-                this._pos.x.current = -maxLeft;
+            if (this._pos.x.current > maxLeft) {
+                this._pos.x.current = maxLeft;
             }
-            else if (this._pos.x.current >= minLeft) {
+            else if (this._pos.x.current < minLeft) {
                 this._pos.x.current = minLeft;
             }
         }
@@ -204,10 +209,10 @@ var PagePanPinch = (function () {
             this._pos.x.current = minLeft;
         }
         if (pageHeight > this._bounds.clientHeight) {
-            if (this._pos.y.current < -maxTop) {
-                this._pos.y.current = -maxTop;
+            if (this._pos.y.current > maxTop) {
+                this._pos.y.current = maxTop;
             }
-            else if (this._pos.y.current >= minTop) {
+            else if (this._pos.y.current < minTop) {
                 this._pos.y.current = minTop;
             }
         }
