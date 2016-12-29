@@ -1,6 +1,6 @@
 class PagePanPinch {
 
-    public version: string = "0.14";
+    public version: string = "0.15";
 
     public options: any = {
         bounds: "",
@@ -9,6 +9,7 @@ class PagePanPinch {
         page: "",
         debug: "",
         zoomIncrements: .25,
+        zoomFit: true,
         onTap: (pt, ev) => { },
         onDoubleTap: (pt, ev) => { }
         // onSwipe: (pt, ev, direction) => { }
@@ -30,7 +31,8 @@ class PagePanPinch {
     };
 
     private _pos: any = {
-        friction: .9,
+        friction: .8,
+        updateInterval: 20,
         x: {
             last: 0,
             current: 0,
@@ -74,20 +76,21 @@ class PagePanPinch {
             throw "DOM Elements undefined";
         }
 
-        this.setupContainers();
-        this.setupTouch();
-        this.init(true);
+        this.init(this.options.zoomFit);
 
     }
 
     public init(scale: boolean): void {
+        this.setupContainers();
+        this.setupTouch();        
         this.setMaxMinScale(scale);
         this.update();
+        if (scale) {
+            this.updateContentScroll();
+        }
     }
 
     public refresh(): void {
-        this.setupContainers();
-        this.setupTouch();
         this.init(false);
     }
 
@@ -139,7 +142,7 @@ class PagePanPinch {
     // };
 
     private _eventPinchStart = (ev: any): void => {
-        this._clearPanTimer();
+        this.clearPanTimer();
     };
 
     private _eventPinchMove = (ev: any): void => {
@@ -150,8 +153,7 @@ class PagePanPinch {
     private _eventPinchEnd = (ev: any): void => {
         this._scale.last = this._scale.current;
         this.update();
-        this._contentScroll.style.width = `${this._scale.width}px`;
-        this._contentScroll.style.height = `${this._scale.height}px`;
+        this.updateContentScroll();
     };
 
     private _eventTap = (ev: any): void => {
@@ -164,7 +166,7 @@ class PagePanPinch {
     };
 
     private _eventPanStart = (ev: any): void => {
-        this._clearPanTimer();
+        this.clearPanTimer();
     };
 
     private _eventPanMove = (ev: any): void => {
@@ -176,18 +178,16 @@ class PagePanPinch {
     private _eventPanEnd = (ev: any): void => {
         this._pos.x.last = this._pos.x.current;
         this._pos.y.last = this._pos.y.current;
-        this._pos.x.vel = ev.velocityX * -1;
-        this._pos.y.vel = ev.velocityY * -1;
         this._pos.x.delta = ev.deltaX * -1;
         this._pos.y.delta = ev.deltaY * -1;
         if (Math.abs(ev.velocity) > .2) {
             this._panTimer = setInterval(() => {
                 this.updatePanVel();
-            }, 20);
+            }, this._pos.updateInterval);
         }
     };
 
-    private _clearPanTimer(): void {
+    private clearPanTimer(): void {
         if (this._panTimer) {
             clearInterval(this._panTimer);
         }
@@ -210,34 +210,33 @@ class PagePanPinch {
     private update(): any {
 
         this.setWithinBounds();
-
-        // let x: number = Math.round(this._pos.x.current * this._scale.current);
-        // let y: number = Math.round(this._pos.y.current * this._scale.current);
-
         this._bounds.scrollLeft = this._pos.x.current;
         this._bounds.scrollTop = this._pos.y.current;
-
-
-
         this._contentZoom.style.transform = `translateZ(0px) scale(${this._scale.current})`;
 
+    }
+
+    private updateContentScroll(): void {
+        this._contentScroll.style.width = `${this._scale.width}px`;
+        this._contentScroll.style.height = `${this._scale.height}px`;
     }
 
     private setMaxMinScale(scale: boolean): void {
 
         let scaleWidth: number = this._bounds.clientWidth / this._page.clientWidth;
-        // let scaleHeight: number = this._bounds.clientHeight / this._page.clientHeight;
+        let scaleHeight: number = this._bounds.clientHeight / this._page.clientHeight;
+        let scaleBy: number = (scaleHeight < scaleWidth) ? scaleHeight : scaleWidth;
 
         if (scale) {
-            this._scale.last = this._scale.current = scaleWidth;
+            this._scale.last = this._scale.current = scaleBy;
         }
 
-        this._scale.min = scaleWidth;
+        this._scale.min = scaleBy;
 
-        if (scaleWidth < 1) {
+        if (scaleBy < 1) {
             this._scale.max = 2;
         } else {
-            this._scale.max = scaleWidth * 2;
+            this._scale.max = scaleBy * 2;
         }
 
     }
@@ -254,10 +253,10 @@ class PagePanPinch {
 
         // set translate boundaries
         let pageWidth: number = this._page.clientWidth * this._scale.current;
-        let pageHeight: number = this._page.clientHeight * this._scale.current;  
+        let pageHeight: number = this._page.clientHeight * this._scale.current;
 
-        this._scale.width = pageWidth;   
-        this._scale.height = pageHeight;   
+        this._scale.width = pageWidth;
+        this._scale.height = pageHeight;
 
         let maxLeft: number = pageWidth - this._bounds.clientWidth;
         let maxTop: number = pageHeight - this._bounds.clientHeight;

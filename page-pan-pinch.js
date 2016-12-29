@@ -1,7 +1,7 @@
 var PagePanPinch = (function () {
     function PagePanPinch(options) {
         var _this = this;
-        this.version = "0.14";
+        this.version = "0.15";
         this.options = {
             bounds: "",
             contentScroll: "",
@@ -9,6 +9,7 @@ var PagePanPinch = (function () {
             page: "",
             debug: "",
             zoomIncrements: .25,
+            zoomFit: true,
             onTap: function (pt, ev) { },
             onDoubleTap: function (pt, ev) { }
         };
@@ -21,7 +22,8 @@ var PagePanPinch = (function () {
             height: 0
         };
         this._pos = {
-            friction: .9,
+            friction: .8,
+            updateInterval: 20,
             x: {
                 last: 0,
                 current: 0,
@@ -36,7 +38,7 @@ var PagePanPinch = (function () {
             }
         };
         this._eventPinchStart = function (ev) {
-            _this._clearPanTimer();
+            _this.clearPanTimer();
         };
         this._eventPinchMove = function (ev) {
             _this._scale.current = _this._scale.last * ev.scale;
@@ -45,8 +47,7 @@ var PagePanPinch = (function () {
         this._eventPinchEnd = function (ev) {
             _this._scale.last = _this._scale.current;
             _this.update();
-            _this._contentScroll.style.width = _this._scale.width + "px";
-            _this._contentScroll.style.height = _this._scale.height + "px";
+            _this.updateContentScroll();
         };
         this._eventTap = function (ev) {
             if (ev.tapCount === 1) {
@@ -58,7 +59,7 @@ var PagePanPinch = (function () {
             return;
         };
         this._eventPanStart = function (ev) {
-            _this._clearPanTimer();
+            _this.clearPanTimer();
         };
         this._eventPanMove = function (ev) {
             _this._pos.x.current = _this._pos.x.last + (ev.deltaX * -1);
@@ -68,14 +69,12 @@ var PagePanPinch = (function () {
         this._eventPanEnd = function (ev) {
             _this._pos.x.last = _this._pos.x.current;
             _this._pos.y.last = _this._pos.y.current;
-            _this._pos.x.vel = ev.velocityX * -1;
-            _this._pos.y.vel = ev.velocityY * -1;
             _this._pos.x.delta = ev.deltaX * -1;
             _this._pos.y.delta = ev.deltaY * -1;
             if (Math.abs(ev.velocity) > .2) {
                 _this._panTimer = setInterval(function () {
                     _this.updatePanVel();
-                }, 20);
+                }, _this._pos.updateInterval);
             }
         };
         if (window.Hammer === undefined) {
@@ -94,17 +93,18 @@ var PagePanPinch = (function () {
         if (!this._bounds || !this._contentScroll || !this._contentZoom || !this._page) {
             throw "DOM Elements undefined";
         }
-        this.setupContainers();
-        this.setupTouch();
-        this.init(true);
+        this.init(this.options.zoomFit);
     }
     PagePanPinch.prototype.init = function (scale) {
-        this.setMaxMinScale(scale);
-        this.update();
-    };
-    PagePanPinch.prototype.refresh = function () {
         this.setupContainers();
         this.setupTouch();
+        this.setMaxMinScale(scale);
+        this.update();
+        if (scale) {
+            this.updateContentScroll();
+        }
+    };
+    PagePanPinch.prototype.refresh = function () {
         this.init(false);
     };
     PagePanPinch.prototype.zoom = function (direction) {
@@ -142,7 +142,7 @@ var PagePanPinch = (function () {
         this._mc.on("panmove", this._eventPanMove);
         this._mc.on("panend", this._eventPanEnd);
     };
-    PagePanPinch.prototype._clearPanTimer = function () {
+    PagePanPinch.prototype.clearPanTimer = function () {
         if (this._panTimer) {
             clearInterval(this._panTimer);
         }
@@ -165,17 +165,23 @@ var PagePanPinch = (function () {
         this._bounds.scrollTop = this._pos.y.current;
         this._contentZoom.style.transform = "translateZ(0px) scale(" + this._scale.current + ")";
     };
+    PagePanPinch.prototype.updateContentScroll = function () {
+        this._contentScroll.style.width = this._scale.width + "px";
+        this._contentScroll.style.height = this._scale.height + "px";
+    };
     PagePanPinch.prototype.setMaxMinScale = function (scale) {
         var scaleWidth = this._bounds.clientWidth / this._page.clientWidth;
+        var scaleHeight = this._bounds.clientHeight / this._page.clientHeight;
+        var scaleBy = (scaleHeight < scaleWidth) ? scaleHeight : scaleWidth;
         if (scale) {
-            this._scale.last = this._scale.current = scaleWidth;
+            this._scale.last = this._scale.current = scaleBy;
         }
-        this._scale.min = scaleWidth;
-        if (scaleWidth < 1) {
+        this._scale.min = scaleBy;
+        if (scaleBy < 1) {
             this._scale.max = 2;
         }
         else {
-            this._scale.max = scaleWidth * 2;
+            this._scale.max = scaleBy * 2;
         }
     };
     PagePanPinch.prototype.setWithinBounds = function () {
