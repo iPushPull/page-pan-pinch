@@ -98,14 +98,16 @@ var PagePanPinch = (function () {
     PagePanPinch.prototype.init = function (scale) {
         this.setupContainers();
         this.setupTouch();
-        this.setMaxMinScale(scale);
+        if (scale) {
+            this.setMaxMinScale();
+        }
         this.update();
         if (scale) {
             this.updateContentScroll();
         }
     };
     PagePanPinch.prototype.refresh = function () {
-        this.init(false);
+        this.init(this.options.zoomFit);
     };
     PagePanPinch.prototype.zoom = function (direction) {
         if (direction === "in") {
@@ -166,16 +168,14 @@ var PagePanPinch = (function () {
         this._contentZoom.style.transform = "translateZ(0px) scale(" + this._scale.current + ")";
     };
     PagePanPinch.prototype.updateContentScroll = function () {
-        this._contentScroll.style.width = this._scale.width + "px";
-        this._contentScroll.style.height = this._scale.height + "px";
+        this._contentScroll.style.width = Math.ceil(this._scale.width) + "px";
+        this._contentScroll.style.height = Math.ceil(this._scale.height) + "px";
     };
     PagePanPinch.prototype.setMaxMinScale = function (scale) {
         var scaleWidth = this._bounds.clientWidth / this._page.clientWidth;
         var scaleHeight = this._bounds.clientHeight / this._page.clientHeight;
         var scaleBy = (scaleHeight < scaleWidth) ? scaleHeight : scaleWidth;
-        if (scale) {
-            this._scale.last = this._scale.current = scaleBy;
-        }
+        this._scale.last = this._scale.current = scaleBy;
         this._scale.min = scaleBy;
         if (scaleBy < 1) {
             this._scale.max = 2;
@@ -231,4 +231,3 @@ var PagePanPinch = (function () {
     };
     return PagePanPinch;
 }());
-//# sourceMappingURL=page-pan-pinch.js.map

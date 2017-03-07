@@ -82,8 +82,10 @@ class PagePanPinch {
 
     public init(scale: boolean): void {
         this.setupContainers();
-        this.setupTouch();        
-        this.setMaxMinScale(scale);
+        this.setupTouch();      
+        if (scale) {
+            this.setMaxMinScale();
+        }
         this.update();
         if (scale) {
             this.updateContentScroll();
@@ -91,7 +93,7 @@ class PagePanPinch {
     }
 
     public refresh(): void {
-        this.init(false);
+        this.init(this.options.zoomFit);
     }
 
     public zoom(direction: string): void {
@@ -217,8 +219,8 @@ class PagePanPinch {
     }
 
     private updateContentScroll(): void {
-        this._contentScroll.style.width = `${this._scale.width}px`;
-        this._contentScroll.style.height = `${this._scale.height}px`;
+        this._contentScroll.style.width = `${Math.ceil(this._scale.width)}px`;
+        this._contentScroll.style.height = `${Math.ceil(this._scale.height)}px`;
     }
 
     private setMaxMinScale(scale: boolean): void {
@@ -227,9 +229,7 @@ class PagePanPinch {
         let scaleHeight: number = this._bounds.clientHeight / this._page.clientHeight;
         let scaleBy: number = (scaleHeight < scaleWidth) ? scaleHeight : scaleWidth;
 
-        if (scale) {
-            this._scale.last = this._scale.current = scaleBy;
-        }
+        this._scale.last = this._scale.current = scaleBy;
 
         this._scale.min = scaleBy;
 
