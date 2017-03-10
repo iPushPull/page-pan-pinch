@@ -131,6 +131,8 @@ var PagePanPinch = (function () {
         this.options.zoomFit = value;
         if (!value) {
             this._scale.last = this._scale.current = 1;
+            this._scale.max = 2;
+            this._scale.min = .5;
         }
         this.refresh();
     };
