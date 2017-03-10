@@ -96,15 +96,23 @@ var PagePanPinch = (function () {
         this.init(this.options.zoomFit);
     }
     PagePanPinch.prototype.init = function (scale) {
-        this.setupContainers();
-        this.setupTouch();
-        if (scale) {
-            this.setMaxMinScale();
-        }
-        this.update();
-        if (scale) {
-            this.updateContentScroll();
-        }
+        var _this = this;
+        var i = setInterval(function () {
+            if (!_this._page.childNodes.length) {
+                return;
+            }
+            clearInterval(i);
+            i = undefined;
+            _this.setupContainers();
+            _this.setupTouch();
+            if (scale) {
+                _this.setMaxMinScale();
+            }
+            _this.update();
+            if (scale) {
+                _this.updateContentScroll();
+            }
+        }, 10);
     };
     PagePanPinch.prototype.refresh = function () {
         this.init(this.options.zoomFit);
@@ -118,6 +126,13 @@ var PagePanPinch = (function () {
         }
         this._scale.last = this._scale.current;
         this.update();
+    };
+    PagePanPinch.prototype.zoomFit = function (value) {
+        this.options.zoomFit = value;
+        if (!value) {
+            this._scale.last = this._scale.current = 1;
+        }
+        this.refresh();
     };
     PagePanPinch.prototype.setupContainers = function () {
         this._contentZoom.style.transformOrigin = "0 0";

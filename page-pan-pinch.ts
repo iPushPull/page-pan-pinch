@@ -81,15 +81,22 @@ class PagePanPinch {
     }
 
     public init(scale: boolean): void {
-        this.setupContainers();
-        this.setupTouch();      
-        if (scale) {
-            this.setMaxMinScale();
-        }
-        this.update();
-        if (scale) {
-            this.updateContentScroll();
-        }
+        let i: any = setInterval(() => {
+            if (!this._page.childNodes.length) {
+                return;
+            }
+            clearInterval(i);
+            i = undefined;
+            this.setupContainers();
+            this.setupTouch();
+            if (scale) {
+                this.setMaxMinScale();
+            }
+            this.update();
+            if (scale) {
+                this.updateContentScroll();
+            }
+        }, 10);
     }
 
     public refresh(): void {
@@ -104,6 +111,14 @@ class PagePanPinch {
         }
         this._scale.last = this._scale.current;
         this.update();
+    }
+
+    public zoomFit(value: boolean): void {
+        this.options.zoomFit = value;
+        if (!value) {
+            this._scale.last = this._scale.current = 1;
+        }
+        this.refresh();
     }
 
     private setupContainers(): void {
