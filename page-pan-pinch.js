@@ -7,6 +7,7 @@ var PagePanPinch = (function () {
             contentScroll: "",
             contentZoom: "",
             page: "",
+            pageHasChildren: false,
             debug: "",
             zoomIncrements: .25,
             zoomFit: true,
@@ -98,7 +99,7 @@ var PagePanPinch = (function () {
     PagePanPinch.prototype.init = function (scale) {
         var _this = this;
         var i = setInterval(function () {
-            if (!_this._page.childNodes.length) {
+            if (_this.options.pageHasChildren && !_this._page.childNodes.length) {
                 return;
             }
             clearInterval(i);

@@ -7,6 +7,7 @@ class PagePanPinch {
         contentScroll: "",
         contentZoom: "",
         page: "",
+        pageHasChildren: false,
         debug: "",
         zoomIncrements: .25,
         zoomFit: true,
@@ -82,7 +83,7 @@ class PagePanPinch {
 
     public init(scale: boolean): void {
         let i: any = setInterval(() => {
-            if (!this._page.childNodes.length) {
+            if (this.options.pageHasChildren && !this._page.childNodes.length) {
                 return;
             }
             clearInterval(i);
