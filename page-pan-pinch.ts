@@ -245,6 +245,12 @@ class PagePanPinch {
         let scaleWidth: number = this._bounds.clientWidth / this._page.clientWidth;
         let scaleHeight: number = this._bounds.clientHeight / this._page.clientHeight;
         let scaleBy: number = (scaleHeight < scaleWidth) ? scaleHeight : scaleWidth;
+        if (this.options.zoomFit === "width") {
+            scaleBy = scaleWidth;
+        }
+        if (this.options.zoomFit === "height") {
+            scaleBy = scaleHeight;
+        }
 
         this._scale.last = this._scale.current = scaleBy;
 
