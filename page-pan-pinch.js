@@ -24,7 +24,7 @@ var PagePanPinch = (function () {
         };
         this._pos = {
             friction: .8,
-            updateInterval: 20,
+            updateInterval: 50,
             x: {
                 last: 0,
                 current: 0,
@@ -39,7 +39,9 @@ var PagePanPinch = (function () {
             }
         };
         this._eventPinchStart = function (ev) {
+            _this._scale.last = _this._scale.current;
             _this.clearPanTimer();
+            _this.updateContentScroll();
         };
         this._eventPinchMove = function (ev) {
             _this._scale.current = _this._scale.last * ev.scale;
@@ -60,7 +62,9 @@ var PagePanPinch = (function () {
             return;
         };
         this._eventPanStart = function (ev) {
+            _this._scale.last = _this._scale.current;
             _this.clearPanTimer();
+            _this.updateContentScroll();
         };
         this._eventPanMove = function (ev) {
             _this._pos.x.current = _this._pos.x.last + (ev.deltaX * -1);

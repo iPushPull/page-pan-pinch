@@ -33,7 +33,7 @@ class PagePanPinch {
 
     private _pos: any = {
         friction: .8,
-        updateInterval: 20,
+        updateInterval: 50,
         x: {
             last: 0,
             current: 0,
@@ -119,7 +119,7 @@ class PagePanPinch {
         if (!value) {
             this._scale.last = this._scale.current = 1;
             this._scale.max = 2;
-            this._scale.min = .5;            
+            this._scale.min = .5;
         }
         this.refresh();
     }
@@ -162,7 +162,9 @@ class PagePanPinch {
     // };
 
     private _eventPinchStart = (ev: any): void => {
+        this._scale.last = this._scale.current;
         this.clearPanTimer();
+        this.updateContentScroll();
     };
 
     private _eventPinchMove = (ev: any): void => {
@@ -186,7 +188,9 @@ class PagePanPinch {
     };
 
     private _eventPanStart = (ev: any): void => {
+        this._scale.last = this._scale.current;
         this.clearPanTimer();
+        this.updateContentScroll();
     };
 
     private _eventPanMove = (ev: any): void => {
