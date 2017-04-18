@@ -279,6 +279,12 @@ class PagePanPinch {
                 case "scroller":
                     let xWidth: number = Math.round((this._scrollBounds.width / this._scrollRect.width) * this._scrollBounds.width);
                     let yHeight: number = Math.round((this._scrollBounds.height / this._scrollRect.height) * this._scrollBounds.height);
+                    if (showAxis.indexOf("x") === -1) {
+                        xWidth = 0;
+                    }
+                    if (showAxis.indexOf("y") === -1) {
+                        yHeight = 0;
+                    }
                     this._scrollBarElements[element].length = axis === "x" ? xWidth : yHeight;
                     e.style.left = axis === "x" ? `${(this._scrollBounds.left)}px` : `${(this._scrollBounds.right)}px`;
                     e.style.top = axis === "x" ? `${(this._scrollBounds.top + this._scrollBounds.height)}px` : `${(this._scrollBounds.top)}px`;

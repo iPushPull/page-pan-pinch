@@ -310,6 +310,12 @@ var PagePanPinch = (function () {
                 case "scroller":
                     var xWidth = Math.round((this_1._scrollBounds.width / this_1._scrollRect.width) * this_1._scrollBounds.width);
                     var yHeight = Math.round((this_1._scrollBounds.height / this_1._scrollRect.height) * this_1._scrollBounds.height);
+                    if (showAxis.indexOf("x") === -1) {
+                        xWidth = 0;
+                    }
+                    if (showAxis.indexOf("y") === -1) {
+                        yHeight = 0;
+                    }
                     this_1._scrollBarElements[element].length = axis === "x" ? xWidth : yHeight;
                     e.style.left = axis === "x" ? (this_1._scrollBounds.left) + "px" : (this_1._scrollBounds.right) + "px";
                     e.style.top = axis === "x" ? (this_1._scrollBounds.top + this_1._scrollBounds.height) + "px" : (this_1._scrollBounds.top) + "px";
