@@ -14,6 +14,7 @@ var PagePanPinch = (function () {
             zoomFit: true,
             scrollBars: false,
             scrollBarWidth: 10,
+            scrollBarsInset: false,
             onTap: function (pt, ev) { },
             onDoubleTap: function (pt, ev) { }
         };
@@ -104,6 +105,7 @@ var PagePanPinch = (function () {
             _this._pos[axis].current += 20 * delta * -1;
             _this.update();
             _this._pos[axis].current = _this._pos[axis].last = _this._bounds[scroll];
+            evt.preventDefault();
         };
         this._eventScrollMouseMove = function (evt) {
             for (var e in _this._scrollBarElements) {
@@ -306,6 +308,10 @@ var PagePanPinch = (function () {
             e.className = this_1.removeClassname(e.className, this_1._options.prefix + "-show");
             e.className = this_1.removeClassname(e.className, this_1._options.prefix + "-hide");
             e.className = this_1.addClassname(e.className, className);
+            var offset = 0;
+            if (this_1._options.scrollBarsInset) {
+                offset = this_1._options.scrollBarWidth * -1;
+            }
             switch (this_1._scrollBarElements[element].type) {
                 case "scroller":
                     var xWidth = Math.round((this_1._scrollBounds.width / this_1._scrollRect.width) * this_1._scrollBounds.width);
@@ -317,14 +323,14 @@ var PagePanPinch = (function () {
                         yHeight = 0;
                     }
                     this_1._scrollBarElements[element].length = axis === "x" ? xWidth : yHeight;
-                    e.style.left = axis === "x" ? (this_1._scrollBounds.left) + "px" : (this_1._scrollBounds.right) + "px";
-                    e.style.top = axis === "x" ? (this_1._scrollBounds.top + this_1._scrollBounds.height) + "px" : (this_1._scrollBounds.top) + "px";
+                    e.style.left = axis === "x" ? (this_1._scrollBounds.left) + "px" : (this_1._scrollBounds.right + offset) + "px";
+                    e.style.top = axis === "x" ? (this_1._scrollBounds.top + this_1._scrollBounds.height + offset) + "px" : (this_1._scrollBounds.top) + "px";
                     e.style.width = axis === "x" ? xWidth + "px" : this_1._options.scrollBarWidth + "px";
                     e.style.height = axis === "x" ? this_1._options.scrollBarWidth + "px" : yHeight + "px";
                     break;
                 default:
-                    e.style.left = axis === "x" ? (this_1._scrollBounds.left) + "px" : (this_1._scrollBounds.right) + "px";
-                    e.style.top = axis === "x" ? (this_1._scrollBounds.top + this_1._scrollBounds.height) + "px" : (this_1._scrollBounds.top) + "px";
+                    e.style.left = axis === "x" ? (this_1._scrollBounds.left) + "px" : (this_1._scrollBounds.right + offset) + "px";
+                    e.style.top = axis === "x" ? (this_1._scrollBounds.top + this_1._scrollBounds.height + offset) + "px" : (this_1._scrollBounds.top) + "px";
                     e.style.width = axis === "x" ? this_1._scrollBounds.width + "px" : this_1._options.scrollBarWidth + "px";
                     e.style.height = axis === "x" ? this_1._options.scrollBarWidth + "px" : this_1._scrollBounds.height + "px";
                     break;

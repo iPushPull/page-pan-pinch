@@ -14,6 +14,7 @@ class PagePanPinch {
         zoomFit: true, // false, true, width, height
         scrollBars: false,
         scrollBarWidth: 10,
+        scrollBarsInset: false,
         onTap: (pt, ev) => { },
         onDoubleTap: (pt, ev) => { }
         // onSwipe: (pt, ev, direction) => { }
@@ -273,6 +274,11 @@ class PagePanPinch {
             e.className = this.removeClassname(e.className, `${this._options.prefix}-hide`);
             e.className = this.addClassname(e.className, className);
 
+            let offset: number = 0;
+            if (this._options.scrollBarsInset) {
+                offset = this._options.scrollBarWidth * -1;
+            }
+
             // set size of handles
             switch (this._scrollBarElements[element].type) {
 
@@ -286,15 +292,15 @@ class PagePanPinch {
                         yHeight = 0;
                     }
                     this._scrollBarElements[element].length = axis === "x" ? xWidth : yHeight;
-                    e.style.left = axis === "x" ? `${(this._scrollBounds.left)}px` : `${(this._scrollBounds.right)}px`;
-                    e.style.top = axis === "x" ? `${(this._scrollBounds.top + this._scrollBounds.height)}px` : `${(this._scrollBounds.top)}px`;
+                    e.style.left = axis === "x" ? `${(this._scrollBounds.left)}px` : `${(this._scrollBounds.right + offset)}px`;
+                    e.style.top = axis === "x" ? `${(this._scrollBounds.top + this._scrollBounds.height + offset)}px` : `${(this._scrollBounds.top)}px`;
                     e.style.width = axis === "x" ? `${xWidth}px` : `${this._options.scrollBarWidth}px`;
                     e.style.height = axis === "x" ? `${this._options.scrollBarWidth}px` : `${yHeight}px`;
                     break;
                 // bar
                 default:
-                    e.style.left = axis === "x" ? `${(this._scrollBounds.left)}px` : `${(this._scrollBounds.right)}px`;
-                    e.style.top = axis === "x" ? `${(this._scrollBounds.top + this._scrollBounds.height)}px` : `${(this._scrollBounds.top)}px`;
+                    e.style.left = axis === "x" ? `${(this._scrollBounds.left)}px` : `${(this._scrollBounds.right + offset)}px`;
+                    e.style.top = axis === "x" ? `${(this._scrollBounds.top + this._scrollBounds.height + offset)}px` : `${(this._scrollBounds.top)}px`;
                     e.style.width = axis === "x" ? `${this._scrollBounds.width}px` : `${this._options.scrollBarWidth}px`;
                     e.style.height = axis === "x" ? `${this._options.scrollBarWidth}px` : `${this._scrollBounds.height}px`;
                     break;
@@ -364,6 +370,7 @@ class PagePanPinch {
         this._pos[axis].current += 20 * delta * -1;
         this.update();
         this._pos[axis].current = this._pos[axis].last = this._bounds[scroll];
+        evt.preventDefault();
     };
 
     private _eventScrollMouseMove = (evt: any) => {
