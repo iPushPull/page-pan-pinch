@@ -199,8 +199,10 @@ class PagePanPinch {
             this._scrollEvents = false;
         }
 
-        this._scrollBounds = this._bounds.getBoundingClientRect();
-        this._scrollRect = this._contentScroll.getBoundingClientRect();
+        this._scrollBounds = this.getBoundingClientRect(this._bounds.getBoundingClientRect());
+        this._scrollRect = this.getBoundingClientRect(this._contentScroll.getBoundingClientRect());
+        this._scrollRect.height = this._scrollRect.height * this._scale.current;
+        this._scrollRect.width = this._scrollRect.width * this._scale.current;
 
         // check if scrollbars requried
         this._scrollBars = false;
@@ -214,7 +216,9 @@ class PagePanPinch {
             for (let i: number = 0; i < nodes.length; i++) {
                 this._bounds.parentNode.removeChild(nodes[i]);
             }
-            return;
+            if (this._options.zoomFit === "contain") {
+                return;
+            }
         }
 
         let showAxis: any = [];
@@ -283,8 +287,8 @@ class PagePanPinch {
             switch (this._scrollBarElements[element].type) {
 
                 case "scroller":
-                    let xWidth: number = Math.round((this._scrollBounds.width / this._scrollRect.width) * this._scrollBounds.width);
-                    let yHeight: number = Math.round((this._scrollBounds.height / this._scrollRect.height) * this._scrollBounds.height);
+                    let xWidth: number = Math.floor((this._scrollBounds.width / this._scrollRect.width) * this._scrollBounds.width);
+                    let yHeight: number = Math.floor((this._scrollBounds.height / this._scrollRect.height) * this._scrollBounds.height);
                     if (showAxis.indexOf("x") === -1) {
                         xWidth = 0;
                     }
@@ -619,6 +623,19 @@ class PagePanPinch {
     private removeClassname(currentName: string, name: string): string {
         let exp: any = new RegExp(`${name}`, "ig");
         return currentName.replace(exp, "").trim();
+    }
+
+    private getBoundingClientRect(rect: any): any {
+        return {
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            x: rect.x,
+            y: rect.y,
+        };
     }
 
 

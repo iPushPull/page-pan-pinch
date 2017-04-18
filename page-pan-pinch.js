@@ -257,8 +257,10 @@ var PagePanPinch = (function () {
             this._bounds.removeEventListener("mousewheel", this._eventScrollWheel, false);
             this._scrollEvents = false;
         }
-        this._scrollBounds = this._bounds.getBoundingClientRect();
-        this._scrollRect = this._contentScroll.getBoundingClientRect();
+        this._scrollBounds = this.getBoundingClientRect(this._bounds.getBoundingClientRect());
+        this._scrollRect = this.getBoundingClientRect(this._contentScroll.getBoundingClientRect());
+        this._scrollRect.height = this._scrollRect.height * this._scale.current;
+        this._scrollRect.width = this._scrollRect.width * this._scale.current;
         this._scrollBars = false;
         if (this._scrollBounds.height < this._scrollRect.height || this._scrollBounds.width < this._scrollRect.width) {
             this._scrollBars = true;
@@ -268,7 +270,9 @@ var PagePanPinch = (function () {
             for (var i = 0; i < nodes.length; i++) {
                 this._bounds.parentNode.removeChild(nodes[i]);
             }
-            return;
+            if (this._options.zoomFit === "contain") {
+                return;
+            }
         }
         var showAxis = [];
         if (this._scrollBounds.height < this._scrollRect.height) {
@@ -314,8 +318,8 @@ var PagePanPinch = (function () {
             }
             switch (this_1._scrollBarElements[element].type) {
                 case "scroller":
-                    var xWidth = Math.round((this_1._scrollBounds.width / this_1._scrollRect.width) * this_1._scrollBounds.width);
-                    var yHeight = Math.round((this_1._scrollBounds.height / this_1._scrollRect.height) * this_1._scrollBounds.height);
+                    var xWidth = Math.floor((this_1._scrollBounds.width / this_1._scrollRect.width) * this_1._scrollBounds.width);
+                    var yHeight = Math.floor((this_1._scrollBounds.height / this_1._scrollRect.height) * this_1._scrollBounds.height);
                     if (showAxis.indexOf("x") === -1) {
                         xWidth = 0;
                     }
@@ -491,6 +495,18 @@ var PagePanPinch = (function () {
     PagePanPinch.prototype.removeClassname = function (currentName, name) {
         var exp = new RegExp("" + name, "ig");
         return currentName.replace(exp, "").trim();
+    };
+    PagePanPinch.prototype.getBoundingClientRect = function (rect) {
+        return {
+            top: rect.top,
+            right: rect.right,
+            bottom: rect.bottom,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            x: rect.x,
+            y: rect.y,
+        };
     };
     return PagePanPinch;
 }());
