@@ -344,9 +344,11 @@ class PagePanPinch {
         this._mc.add([pan, doubleTap, pinch]);
 
         // event listeners
-        this._mc.on("pinchstart", this._eventPinchStart);
-        this._mc.on("pinchmove", this._eventPinchMove);
-        this._mc.on("pinchend", this._eventPinchEnd);
+        if (!this._scrollEvents) {
+            this._mc.on("pinchstart", this._eventPinchStart);
+            this._mc.on("pinchmove", this._eventPinchMove);
+            this._mc.on("pinchend", this._eventPinchEnd);
+        }
         this._mc.on("tap", this._eventTap);
         this._mc.on("panstart", this._eventPanStart);
         this._mc.on("panmove", this._eventPanMove);
