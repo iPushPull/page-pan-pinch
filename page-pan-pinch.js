@@ -15,6 +15,7 @@ var PagePanPinch = (function () {
             scrollBars: false,
             scrollBarWidth: 10,
             scrollBarsInset: false,
+            disablePan: false,
             onTap: function (pt, ev) { },
             onDoubleTap: function (pt, ev) { }
         };

@@ -15,6 +15,7 @@ class PagePanPinch {
         scrollBars: false,
         scrollBarWidth: 10,
         scrollBarsInset: false,
+        disablePan: false,
         onTap: (pt, ev) => { },
         onDoubleTap: (pt, ev) => { }
         // onSwipe: (pt, ev, direction) => { }
