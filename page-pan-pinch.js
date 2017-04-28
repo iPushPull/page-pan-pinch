@@ -371,9 +371,11 @@ var PagePanPinch = (function () {
             this._mc.on("pinchend", this._eventPinchEnd);
         }
         this._mc.on("tap", this._eventTap);
-        this._mc.on("panstart", this._eventPanStart);
-        this._mc.on("panmove", this._eventPanMove);
-        this._mc.on("panend", this._eventPanEnd);
+        if (!this._options.disablePan) {
+            this._mc.on("panstart", this._eventPanStart);
+            this._mc.on("panmove", this._eventPanMove);
+            this._mc.on("panend", this._eventPanEnd);
+        }
     };
     PagePanPinch.prototype.onClickScrollbar = function (element, evt) {
         var scroller = this._scrollBarElements["scroll" + element.axis.toUpperCase()];
