@@ -213,11 +213,11 @@ var PagePanPinch = (function () {
             clearInterval(i);
             i = undefined;
             _this.setupContainers();
-            _this.setupTouch();
             if (scale) {
                 _this.setMaxMinScale();
             }
             _this.setupScrollbars();
+            _this.setupTouch();
             _this.update();
             if (scale) {
                 _this.updateContentScroll();
@@ -249,14 +249,14 @@ var PagePanPinch = (function () {
     };
     PagePanPinch.prototype.setupScrollbars = function () {
         var _this = this;
-        if (!this._options.scrollBars) {
-            return;
-        }
         if (this._scrollEvents) {
             window.removeEventListener("mousemove", this._eventScrollMouseMove, false);
             window.removeEventListener("mouseup", this._eventScrollMouseMove, false);
             this._bounds.removeEventListener("mousewheel", this._eventScrollWheel, false);
             this._scrollEvents = false;
+        }
+        if (!this._options.scrollBars) {
+            return;
         }
         this._scrollBounds = this.getBoundingClientRect(this._bounds.getBoundingClientRect());
         this._scrollRect = this.getBoundingClientRect(this._contentScroll.getBoundingClientRect());

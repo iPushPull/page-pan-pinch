@@ -149,11 +149,11 @@ class PagePanPinch {
             clearInterval(i);
             i = undefined;
             this.setupContainers();
-            this.setupTouch();
             if (scale) {
                 this.setMaxMinScale();
             }
             this.setupScrollbars();
+            this.setupTouch();
             this.update();
             if (scale) {
                 this.updateContentScroll();
@@ -188,10 +188,6 @@ class PagePanPinch {
 
     private setupScrollbars(): void {
 
-        if (!this._options.scrollBars) {
-            return;
-        }
-
         // remove any previous listeners
         if (this._scrollEvents) {
             window.removeEventListener("mousemove", this._eventScrollMouseMove, false);
@@ -199,6 +195,10 @@ class PagePanPinch {
             this._bounds.removeEventListener("mousewheel", this._eventScrollWheel, false);
             this._scrollEvents = false;
         }
+
+        if (!this._options.scrollBars) {
+            return;
+        }        
 
         this._scrollBounds = this.getBoundingClientRect(this._bounds.getBoundingClientRect());
         this._scrollRect = this.getBoundingClientRect(this._contentScroll.getBoundingClientRect());
