@@ -10,6 +10,7 @@ class PagePanPinch {
         page: "",
         pageHasChildren: false,
         debug: "",
+        zoomCss: false,
         zoomIncrements: .25,
         zoomFit: true, // false, true, width, height
         scrollBars: false,
@@ -198,7 +199,7 @@ class PagePanPinch {
 
         if (!this._options.scrollBars) {
             return;
-        }        
+        }
 
         this._scrollBounds = this.getBoundingClientRect(this._bounds.getBoundingClientRect());
         this._scrollRect = this.getBoundingClientRect(this._contentScroll.getBoundingClientRect());
@@ -507,7 +508,10 @@ class PagePanPinch {
         this.setWithinBounds();
         this._bounds.scrollLeft = this._pos.x.current;
         this._bounds.scrollTop = this._pos.y.current;
-        this._contentZoom.style.transform = `translateZ(0px) scale(${this._scale.current})`;
+        this._contentZoom.style.transform = this._options.zoomCss ? `translateZ(0px)` : `translateZ(0px) scale(${this._scale.current})`;
+        if (this._options.zoomCss) {
+            this._contentZoom.style.zoom = `${this._scale.current * 100}%`;
+        }
         this.updateScrollbars();
 
     }

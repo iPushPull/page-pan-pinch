@@ -10,6 +10,7 @@ var PagePanPinch = (function () {
             page: "",
             pageHasChildren: false,
             debug: "",
+            zoomCss: false,
             zoomIncrements: .25,
             zoomFit: true,
             scrollBars: false,
@@ -407,7 +408,10 @@ var PagePanPinch = (function () {
         this.setWithinBounds();
         this._bounds.scrollLeft = this._pos.x.current;
         this._bounds.scrollTop = this._pos.y.current;
-        this._contentZoom.style.transform = "translateZ(0px) scale(" + this._scale.current + ")";
+        this._contentZoom.style.transform = this._options.zoomCss ? "translateZ(0px)" : "translateZ(0px) scale(" + this._scale.current + ")";
+        if (this._options.zoomCss) {
+            this._contentZoom.style.zoom = this._scale.current * 100 + "%";
+        }
         this.updateScrollbars();
     };
     PagePanPinch.prototype.updateScrollbars = function () {
