@@ -351,7 +351,8 @@ var PagePanPinch = (function () {
         this._bounds.addEventListener("mousewheel", this._eventScrollWheel, false);
     };
     PagePanPinch.prototype.setupContainers = function () {
-        this._contentZoom.style.transformOrigin = "0 0";
+        this._contentZoom.style = "";
+        this._contentScroll.style = "";
         this._contentScroll.style.width = this._page.clientWidth + "px";
         this._contentScroll.style.height = this._page.clientHeight + "px";
         this._contentZoom.style.transformOrigin = "0 0";
@@ -494,7 +495,7 @@ var PagePanPinch = (function () {
             this._pos.y.current = minTop;
         }
         if (this._debug) {
-            this._debug.innerHTML = "x: " + this._pos.x.current + ", y: " + this._pos.y.current + ", width: " + pageWidth + ", height: " + pageHeight + ", scale: " + this._scale.last;
+            this._debug.innerHTML = "\n                <table>\n                    <tr>\n                        <td width=\"100\">x</td>\n                        <td align=\"right\">" + this._pos.x.current.toFixed(2) + "</td>\n                    </tr>\n                    <tr>\n                        <td>y</td>\n                        <td align=\"right\">" + this._pos.y.current.toFixed(2) + "</td>\n                    </tr>\n                    <tr>\n                        <td>width</td>\n                        <td align=\"right\">" + pageWidth.toFixed(2) + "</td>\n                    </tr>\n                    <tr>\n                        <td>height</td>\n                        <td align=\"right\">" + pageHeight.toFixed(2) + "</td>\n                    </tr>\n                    <tr>\n                        <td>scale</td>\n                        <td align=\"right\">" + this._scale.last.toFixed(2) + "</td>\n                    </tr>\n                    <tr>\n                        <td>bounds height</td>\n                        <td align=\"right\">" + this._bounds.clientHeight.toFixed(2) + "</td>\n                    </tr>\n                    <tr>\n                        <td>bounds width</td>\n                        <td align=\"right\">" + this._bounds.clientWidth.toFixed(2) + "</td>\n                    </tr>\n                    <tr>\n                        <td>page height</td>\n                        <td align=\"right\">" + this._page.clientHeight.toFixed(2) + "</td>\n                    </tr>\n                    <tr>\n                        <td>page width</td>\n                        <td align=\"right\">" + this._page.clientWidth.toFixed(2) + "</td>\n                    </tr>\n                </table>\n            ";
         }
     };
     PagePanPinch.prototype.addClassname = function (currentName, name) {

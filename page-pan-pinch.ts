@@ -26,6 +26,8 @@ class PagePanPinch {
     private _contentScroll: any;
     private _contentZoom: any;
     private _page: any;
+    private _pageWidth: number;
+    private _pageHeight: number;
     private _debug: any;
     private _scrollBars: boolean = false;
 
@@ -324,8 +326,8 @@ class PagePanPinch {
     }
 
     private setupContainers(): void {
-        // this._bounds.style.overflow = "hidden";
-        this._contentZoom.style.transformOrigin = "0 0";
+        this._contentZoom.style = "";
+        this._contentScroll.style = "";
         this._contentScroll.style.width = `${this._page.clientWidth}px`;
         this._contentScroll.style.height = `${this._page.clientHeight}px`;
         this._contentZoom.style.transformOrigin = "0 0";
@@ -618,7 +620,46 @@ class PagePanPinch {
 
         // debug
         if (this._debug) {
-            this._debug.innerHTML = `x: ${this._pos.x.current}, y: ${this._pos.y.current}, width: ${pageWidth}, height: ${pageHeight}, scale: ${this._scale.last}`;
+            this._debug.innerHTML = `
+                <table>
+                    <tr>
+                        <td width="100">x</td>
+                        <td align="right">${this._pos.x.current.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>y</td>
+                        <td align="right">${this._pos.y.current.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>width</td>
+                        <td align="right">${pageWidth.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>height</td>
+                        <td align="right">${pageHeight.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>scale</td>
+                        <td align="right">${this._scale.last.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>bounds height</td>
+                        <td align="right">${this._bounds.clientHeight.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>bounds width</td>
+                        <td align="right">${this._bounds.clientWidth.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>page height</td>
+                        <td align="right">${this._page.clientHeight.toFixed(2)}</td>
+                    </tr>
+                    <tr>
+                        <td>page width</td>
+                        <td align="right">${this._page.clientWidth.toFixed(2)}</td>
+                    </tr>
+                </table>
+            `;
         }
 
     }
