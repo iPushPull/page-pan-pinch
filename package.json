@@ -1,0 +1,19 @@
+{
+  "name": "page-pan-pinch",
+  "version": "1.0.0",
+  "description": "Simple library to zoom and pan",
+  "main": "page-pan-pinch.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iPushPull/page-pan-pinch.git"
+  },
+  "author": "ippkyle <kyle.hengst@ipushpull.com> (www.ipushpull.com)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iPushPull/page-pan-pinch/issues"
+  },
+  "homepage": "https://github.com/iPushPull/page-pan-pinch#readme"
+}
