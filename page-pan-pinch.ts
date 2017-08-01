@@ -14,7 +14,7 @@ class PagePanPinch {
         zoomIncrements: .25,
         zoomFit: true, // false, true, width, height
         scrollBars: false,
-        scrollBarWidth: 10,
+        scrollBarWidth: 8,
         scrollBarsInset: false,
         disablePan: false,
         onTap: (pt, ev) => { },
@@ -98,12 +98,14 @@ class PagePanPinch {
     private _scrollRect: any; // bounding rect
     private _scrollParams: any = {
         x: {
+            parent: "trackX",
             element: "scrollX",
             pos: "mouseX",
             unit: "width",
             dir: "left",
         },
         y: {
+            parent: "trackY",
             element: "scrollY",
             pos: "mouseY",
             unit: "height",
@@ -111,6 +113,7 @@ class PagePanPinch {
         },
     };
     private _scrollEvents: any = false;
+    private _scrollContainer: any;
 
 
     // Hammer Libary
@@ -130,11 +133,11 @@ class PagePanPinch {
         }
 
         // dom elements
-        this._bounds = document.getElementById(this._options.bounds);
-        this._contentScroll = document.getElementById(this._options.contentScroll);
-        this._contentZoom = document.getElementById(this._options.contentZoom);
-        this._page = document.getElementById(this._options.page);
-        this._debug = document.getElementById(this._options.debug);
+        this._bounds = typeof this._options.bounds === "string" ? document.getElementById(this._options.bounds) : this._options.bounds;
+        this._contentScroll = typeof this._options.contentScroll === "string" ? document.getElementById(this._options.contentScroll) : this._options.contentScroll;
+        this._contentZoom = typeof this._options.contentZoom === "string" ? document.getElementById(this._options.contentZoom) : this._options.contentZoom;
+        this._page = typeof this._options.page === "string" ? document.getElementById(this._options.page) : this._options.page;
+        this._debug = typeof this._options.debug === "string" ? document.getElementById(this._options.debug) : this._options.debug;
 
         if (!this._bounds || !this._contentScroll || !this._contentZoom || !this._page) {
             throw "DOM Elements undefined";
@@ -144,7 +147,7 @@ class PagePanPinch {
 
     }
 
-    public init(scale: boolean): void {
+    public init(scale: any): void {
         let i: any = setInterval(() => {
             if (this._options.pageHasChildren && !this._page.childNodes.length) {
                 return;
@@ -165,6 +168,7 @@ class PagePanPinch {
     }
 
     public refresh(): void {
+        this.destroy();
         this.init(this._options.zoomFit);
     }
 
@@ -189,17 +193,36 @@ class PagePanPinch {
         this.refresh();
     }
 
-    private setupScrollbars(): void {
-
+    public destroy(): void {
+        try {
+            // this._contentZoom.style = "";
+            // this._contentScroll.style = "";
+        } catch (e) {
+            ;
+        }
         // remove any previous listeners
-        if (this._scrollEvents) {
+        try {
             window.removeEventListener("mousemove", this._eventScrollMouseMove, false);
             window.removeEventListener("mouseup", this._eventScrollMouseMove, false);
             this._bounds.removeEventListener("mousewheel", this._eventScrollWheel, false);
             this._scrollEvents = false;
+        } catch (e) {
+            ;
         }
+        try {
+            if (this._scrollContainer) {
+                while (this._scrollContainer.firstChild) {
+                    this._scrollContainer.removeChild(this._scrollContainer.firstChild);
+                }
+            }
+        } catch (e) {
+            ;
+        }
+    }
 
-        if (!this._options.scrollBars) {
+    private setupScrollbars(): void {
+
+        if (this._options.zoomFit === "contain" || this._options.zoomFit === true) {
             return;
         }
 
@@ -213,16 +236,8 @@ class PagePanPinch {
         if (this._scrollBounds.height < this._scrollRect.height || this._scrollBounds.width < this._scrollRect.width) {
             this._scrollBars = true;
         }
-
-        // remove any nodes
-        if (this._options.zoomFit) {
-            let nodes: any = this._bounds.parentNode.querySelectorAll(`.${this._options.prefix}`);
-            for (let i: number = 0; i < nodes.length; i++) {
-                this._bounds.parentNode.removeChild(nodes[i]);
-            }
-            if (this._options.zoomFit === "contain") {
-                return;
-            }
+        if (!this._scrollBars) {
+            return;
         }
 
         let showAxis: any = [];
@@ -246,31 +261,31 @@ class PagePanPinch {
             // }
 
             // check if element exists
-            let e: any = this._bounds.parentNode.querySelector(`.${this._options.prefix}-${this._scrollBarElements[element].className}`);
+            // let e: any = this._bounds.querySelector(`.${this._options.prefix}-${this._scrollBarElements[element].className}`);
 
             // create element if doesn't exist
-            if (!e) {
+            // if (!e) {
 
-                e = document.createElement("div");
-                e.className = `${this._options.prefix} ${this._options.prefix}-${this._scrollBarElements[element].className}`;
-                e.style.position = "fixed";
-                e.style.zIndex = this._scrollBarElements[element].zIndex;
+            let e: any = document.createElement("div");
+            e.className = `${this._options.prefix} ${this._options.prefix}-${this._scrollBarElements[element].className}`;
+            e.style.position = "absolute";
+            e.style.zIndex = this._scrollBarElements[element].zIndex;
 
-                // allow drag
-                e.addEventListener("mousedown", (evt: any) => {
-                    if (this._scrollBarElements[element].type === "scroller") {
-                        this._scrollBarElements[element].pos.mouseX = evt.x;
-                        this._scrollBarElements[element].pos.mouseY = evt.y;
-                        this._scrollBarElements[element].pos.x = parseFloat(this._scrollBarElements[element].element.style.left);
-                        this._scrollBarElements[element].pos.y = parseFloat(this._scrollBarElements[element].element.style.top);
-                        this._scrollBarElements[element].drag = true;
-                    } else {
-                        this.onClickScrollbar(this._scrollBarElements[element], evt);
-                    }
-                });
+            // allow drag
+            e.addEventListener("mousedown", (evt: any) => {
+                if (this._scrollBarElements[element].type === "scroller") {
+                    this._scrollBarElements[element].pos.mouseX = evt.x;
+                    this._scrollBarElements[element].pos.mouseY = evt.y;
+                    this._scrollBarElements[element].pos.x = parseFloat(this._scrollBarElements[element].element.style.left);
+                    this._scrollBarElements[element].pos.y = parseFloat(this._scrollBarElements[element].element.style.top);
+                    this._scrollBarElements[element].drag = true;
+                } else {
+                    this.onClickScrollbar(this._scrollBarElements[element], evt);
+                }
+            });
 
-                this._bounds.parentNode.appendChild(e);
-            }
+            // this._bounds.appendChild(e);
+            // }
 
             // assign element
             this._scrollBarElements[element].element = e;
@@ -283,9 +298,9 @@ class PagePanPinch {
             e.className = this.addClassname(e.className, className);
 
             let offset: number = 0;
-            if (this._options.scrollBarsInset) {
-                offset = this._options.scrollBarWidth * -1;
-            }
+            // if (this._options.scrollBarsInset) {
+            offset = this._options.scrollBarWidth * -1;
+            // }
 
             // set size of handles
             switch (this._scrollBarElements[element].type) {
@@ -300,8 +315,8 @@ class PagePanPinch {
                         yHeight = 0;
                     }
                     this._scrollBarElements[element].length = axis === "x" ? xWidth : yHeight;
-                    e.style.left = axis === "x" ? `${(this._scrollBounds.left)}px` : `${(this._scrollBounds.right + offset)}px`;
-                    e.style.top = axis === "x" ? `${(this._scrollBounds.top + this._scrollBounds.height + offset)}px` : `${(this._scrollBounds.top)}px`;
+                    e.style.left = "0px";
+                    e.style.top = "0px";
                     e.style.width = axis === "x" ? `${xWidth}px` : `${this._options.scrollBarWidth}px`;
                     e.style.height = axis === "x" ? `${this._options.scrollBarWidth}px` : `${yHeight}px`;
                     break;
@@ -316,6 +331,16 @@ class PagePanPinch {
 
         }
 
+        // add to dom
+        if (!this._scrollContainer) {
+            this._scrollContainer = document.createElement("div");
+        }
+        this._scrollBarElements.trackX.element.appendChild(this._scrollBarElements.scrollX.element);
+        this._scrollBarElements.trackY.element.appendChild(this._scrollBarElements.scrollY.element);
+        this._scrollContainer.appendChild(this._scrollBarElements.trackX.element);
+        this._scrollContainer.appendChild(this._scrollBarElements.trackY.element);
+        this._bounds.appendChild(this._scrollContainer);
+
         // drag
         window.addEventListener("mousemove", this._eventScrollMouseMove, false);
         // stop drag
@@ -326,8 +351,7 @@ class PagePanPinch {
     }
 
     private setupContainers(): void {
-        this._contentZoom.style = "";
-        this._contentScroll.style = "";
+        this._bounds.style.overflow = "hidden";
         this._contentScroll.style.width = `${this._page.clientWidth}px`;
         this._contentScroll.style.height = `${this._page.clientHeight}px`;
         this._contentZoom.style.transformOrigin = "0 0";
@@ -520,9 +544,15 @@ class PagePanPinch {
 
     private updateScrollbars(): void {
 
-        if (!this._scrollBars || !this._scrollEvents || !this._options.scrollBars) {
+        if (!this._scrollBars || !this._scrollEvents) {
             return;
         }
+
+        this._scrollBarElements.trackX.element.style.left = `${(this._bounds.scrollLeft)}px`;
+        this._scrollBarElements.trackX.element.style.top = `${(this._bounds.scrollTop + this._scrollBounds.height - this._options.scrollBarWidth)}px`;
+
+        this._scrollBarElements.trackY.element.style.left = `${(this._bounds.scrollLeft + this._scrollBounds.width - this._options.scrollBarWidth)}px`;
+        this._scrollBarElements.trackY.element.style.top = `${(this._bounds.scrollTop)}px`;
 
         for (let e in this._scrollParams) {
 
@@ -535,6 +565,8 @@ class PagePanPinch {
             let maxScroll: number = this._scrollRect[param.unit] - this._scrollBounds[param.unit];
             let scrollDistance: number = this._scrollBounds[param.unit] - this._scrollBarElements[param.element].length;
             let pos: number = this._pos[e].current * scrollDistance / maxScroll + this._scrollBounds[param.dir];
+
+            // this._scrollBarElements[param.element.parent].element.style[param.dir] = `${pos}px`;
 
             this._scrollBarElements[param.element].element.style[param.dir] = `${pos}px`;
         }

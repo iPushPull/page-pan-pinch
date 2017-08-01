@@ -14,7 +14,7 @@ var PagePanPinch = (function () {
             zoomIncrements: .25,
             zoomFit: true,
             scrollBars: false,
-            scrollBarWidth: 10,
+            scrollBarWidth: 8,
             scrollBarsInset: false,
             disablePan: false,
             onTap: function (pt, ev) { },
@@ -83,12 +83,14 @@ var PagePanPinch = (function () {
         };
         this._scrollParams = {
             x: {
+                parent: "trackX",
                 element: "scrollX",
                 pos: "mouseX",
                 unit: "width",
                 dir: "left",
             },
             y: {
+                parent: "trackY",
                 element: "scrollY",
                 pos: "mouseY",
                 unit: "height",
@@ -195,11 +197,11 @@ var PagePanPinch = (function () {
                 this._options[i] = options[i];
             }
         }
-        this._bounds = document.getElementById(this._options.bounds);
-        this._contentScroll = document.getElementById(this._options.contentScroll);
-        this._contentZoom = document.getElementById(this._options.contentZoom);
-        this._page = document.getElementById(this._options.page);
-        this._debug = document.getElementById(this._options.debug);
+        this._bounds = typeof this._options.bounds === "string" ? document.getElementById(this._options.bounds) : this._options.bounds;
+        this._contentScroll = typeof this._options.contentScroll === "string" ? document.getElementById(this._options.contentScroll) : this._options.contentScroll;
+        this._contentZoom = typeof this._options.contentZoom === "string" ? document.getElementById(this._options.contentZoom) : this._options.contentZoom;
+        this._page = typeof this._options.page === "string" ? document.getElementById(this._options.page) : this._options.page;
+        this._debug = typeof this._options.debug === "string" ? document.getElementById(this._options.debug) : this._options.debug;
         if (!this._bounds || !this._contentScroll || !this._contentZoom || !this._page) {
             throw "DOM Elements undefined";
         }
@@ -226,6 +228,7 @@ var PagePanPinch = (function () {
         }, 10);
     };
     PagePanPinch.prototype.refresh = function () {
+        this.destroy();
         this.init(this._options.zoomFit);
     };
     PagePanPinch.prototype.zoom = function (direction) {
@@ -248,15 +251,35 @@ var PagePanPinch = (function () {
         }
         this.refresh();
     };
-    PagePanPinch.prototype.setupScrollbars = function () {
-        var _this = this;
-        if (this._scrollEvents) {
+    PagePanPinch.prototype.destroy = function () {
+        try {
+        }
+        catch (e) {
+            ;
+        }
+        try {
             window.removeEventListener("mousemove", this._eventScrollMouseMove, false);
             window.removeEventListener("mouseup", this._eventScrollMouseMove, false);
             this._bounds.removeEventListener("mousewheel", this._eventScrollWheel, false);
             this._scrollEvents = false;
         }
-        if (!this._options.scrollBars) {
+        catch (e) {
+            ;
+        }
+        try {
+            if (this._scrollContainer) {
+                while (this._scrollContainer.firstChild) {
+                    this._scrollContainer.removeChild(this._scrollContainer.firstChild);
+                }
+            }
+        }
+        catch (e) {
+            ;
+        }
+    };
+    PagePanPinch.prototype.setupScrollbars = function () {
+        var _this = this;
+        if (this._options.zoomFit === "contain" || this._options.zoomFit === true) {
             return;
         }
         this._scrollBounds = this.getBoundingClientRect(this._bounds.getBoundingClientRect());
@@ -267,14 +290,8 @@ var PagePanPinch = (function () {
         if (this._scrollBounds.height < this._scrollRect.height || this._scrollBounds.width < this._scrollRect.width) {
             this._scrollBars = true;
         }
-        if (this._options.zoomFit) {
-            var nodes = this._bounds.parentNode.querySelectorAll("." + this._options.prefix);
-            for (var i = 0; i < nodes.length; i++) {
-                this._bounds.parentNode.removeChild(nodes[i]);
-            }
-            if (this._options.zoomFit === "contain") {
-                return;
-            }
+        if (!this._scrollBars) {
+            return;
         }
         var showAxis = [];
         if (this._scrollBounds.height < this._scrollRect.height) {
@@ -289,35 +306,29 @@ var PagePanPinch = (function () {
                 return "continue";
             }
             var axis = this_1._scrollBarElements[element].axis;
-            var e = this_1._bounds.parentNode.querySelector("." + this_1._options.prefix + "-" + this_1._scrollBarElements[element].className);
-            if (!e) {
-                e = document.createElement("div");
-                e.className = this_1._options.prefix + " " + this_1._options.prefix + "-" + this_1._scrollBarElements[element].className;
-                e.style.position = "fixed";
-                e.style.zIndex = this_1._scrollBarElements[element].zIndex;
-                e.addEventListener("mousedown", function (evt) {
-                    if (_this._scrollBarElements[element].type === "scroller") {
-                        _this._scrollBarElements[element].pos.mouseX = evt.x;
-                        _this._scrollBarElements[element].pos.mouseY = evt.y;
-                        _this._scrollBarElements[element].pos.x = parseFloat(_this._scrollBarElements[element].element.style.left);
-                        _this._scrollBarElements[element].pos.y = parseFloat(_this._scrollBarElements[element].element.style.top);
-                        _this._scrollBarElements[element].drag = true;
-                    }
-                    else {
-                        _this.onClickScrollbar(_this._scrollBarElements[element], evt);
-                    }
-                });
-                this_1._bounds.parentNode.appendChild(e);
-            }
+            var e = document.createElement("div");
+            e.className = this_1._options.prefix + " " + this_1._options.prefix + "-" + this_1._scrollBarElements[element].className;
+            e.style.position = "absolute";
+            e.style.zIndex = this_1._scrollBarElements[element].zIndex;
+            e.addEventListener("mousedown", function (evt) {
+                if (_this._scrollBarElements[element].type === "scroller") {
+                    _this._scrollBarElements[element].pos.mouseX = evt.x;
+                    _this._scrollBarElements[element].pos.mouseY = evt.y;
+                    _this._scrollBarElements[element].pos.x = parseFloat(_this._scrollBarElements[element].element.style.left);
+                    _this._scrollBarElements[element].pos.y = parseFloat(_this._scrollBarElements[element].element.style.top);
+                    _this._scrollBarElements[element].drag = true;
+                }
+                else {
+                    _this.onClickScrollbar(_this._scrollBarElements[element], evt);
+                }
+            });
             this_1._scrollBarElements[element].element = e;
             var className = showAxis.indexOf(axis) !== -1 ? this_1._options.prefix + "-show" : this_1._options.prefix + "-hide";
             e.className = this_1.removeClassname(e.className, this_1._options.prefix + "-show");
             e.className = this_1.removeClassname(e.className, this_1._options.prefix + "-hide");
             e.className = this_1.addClassname(e.className, className);
             var offset = 0;
-            if (this_1._options.scrollBarsInset) {
-                offset = this_1._options.scrollBarWidth * -1;
-            }
+            offset = this_1._options.scrollBarWidth * -1;
             switch (this_1._scrollBarElements[element].type) {
                 case "scroller":
                     var xWidth = Math.floor((this_1._scrollBounds.width / this_1._scrollRect.width) * this_1._scrollBounds.width);
@@ -329,8 +340,8 @@ var PagePanPinch = (function () {
                         yHeight = 0;
                     }
                     this_1._scrollBarElements[element].length = axis === "x" ? xWidth : yHeight;
-                    e.style.left = axis === "x" ? (this_1._scrollBounds.left) + "px" : (this_1._scrollBounds.right + offset) + "px";
-                    e.style.top = axis === "x" ? (this_1._scrollBounds.top + this_1._scrollBounds.height + offset) + "px" : (this_1._scrollBounds.top) + "px";
+                    e.style.left = "0px";
+                    e.style.top = "0px";
                     e.style.width = axis === "x" ? xWidth + "px" : this_1._options.scrollBarWidth + "px";
                     e.style.height = axis === "x" ? this_1._options.scrollBarWidth + "px" : yHeight + "px";
                     break;
@@ -346,13 +357,20 @@ var PagePanPinch = (function () {
         for (var element in this._scrollBarElements) {
             _loop_1(element);
         }
+        if (!this._scrollContainer) {
+            this._scrollContainer = document.createElement("div");
+        }
+        this._scrollBarElements.trackX.element.appendChild(this._scrollBarElements.scrollX.element);
+        this._scrollBarElements.trackY.element.appendChild(this._scrollBarElements.scrollY.element);
+        this._scrollContainer.appendChild(this._scrollBarElements.trackX.element);
+        this._scrollContainer.appendChild(this._scrollBarElements.trackY.element);
+        this._bounds.appendChild(this._scrollContainer);
         window.addEventListener("mousemove", this._eventScrollMouseMove, false);
         window.addEventListener("mouseup", this._eventScrollMouseUp, false);
         this._bounds.addEventListener("mousewheel", this._eventScrollWheel, false);
     };
     PagePanPinch.prototype.setupContainers = function () {
-        this._contentZoom.style = "";
-        this._contentScroll.style = "";
+        this._bounds.style.overflow = "hidden";
         this._contentScroll.style.width = this._page.clientWidth + "px";
         this._contentScroll.style.height = this._page.clientHeight + "px";
         this._contentZoom.style.transformOrigin = "0 0";
@@ -416,9 +434,13 @@ var PagePanPinch = (function () {
         this.updateScrollbars();
     };
     PagePanPinch.prototype.updateScrollbars = function () {
-        if (!this._scrollBars || !this._scrollEvents || !this._options.scrollBars) {
+        if (!this._scrollBars || !this._scrollEvents) {
             return;
         }
+        this._scrollBarElements.trackX.element.style.left = (this._bounds.scrollLeft) + "px";
+        this._scrollBarElements.trackX.element.style.top = (this._bounds.scrollTop + this._scrollBounds.height - this._options.scrollBarWidth) + "px";
+        this._scrollBarElements.trackY.element.style.left = (this._bounds.scrollLeft + this._scrollBounds.width - this._options.scrollBarWidth) + "px";
+        this._scrollBarElements.trackY.element.style.top = (this._bounds.scrollTop) + "px";
         for (var e in this._scrollParams) {
             if (!this._scrollParams.hasOwnProperty(e)) {
                 continue;
