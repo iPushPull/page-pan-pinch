@@ -99,6 +99,26 @@ var PagePanPinch = (function () {
         };
         this._scrollEvents = false;
         this._isScrolling = false;
+        this._init = false;
+        this._initScale = false;
+        this.initInterval = function () {
+            if (_this._options.pageHasChildren && !_this._page.childNodes.length) {
+                return;
+            }
+            clearInterval(_this._initInterval);
+            _this._initInterval = undefined;
+            _this.setupContainers();
+            if (_this._initScale) {
+                _this.setMaxMinScale();
+            }
+            _this.setupScrollbars();
+            _this.setupTouch();
+            _this.update();
+            if (_this._initScale) {
+                _this.updateContentScroll();
+            }
+            _this._init = true;
+        };
         this._eventScroll = function (evt) {
             if (!_this._isScrolling) {
                 _this._pos.x.current = _this._bounds.scrollLeft;
@@ -226,24 +246,10 @@ var PagePanPinch = (function () {
         this.init(this._options.zoomFit);
     }
     PagePanPinch.prototype.init = function (scale) {
-        var _this = this;
-        var i = setInterval(function () {
-            if (_this._options.pageHasChildren && !_this._page.childNodes.length) {
-                return;
-            }
-            clearInterval(i);
-            i = undefined;
-            _this.setupContainers();
-            if (scale) {
-                _this.setMaxMinScale();
-            }
-            _this.setupScrollbars();
-            _this.setupTouch();
-            _this.update();
-            if (scale) {
-                _this.updateContentScroll();
-            }
-        }, 10);
+        this._init = false;
+        this._initInterval = setInterval(this.initInterval, 10);
+        this._initScale = scale;
+        this.initInterval();
     };
     PagePanPinch.prototype.refresh = function () {
         this.destroy();
@@ -287,7 +293,7 @@ var PagePanPinch = (function () {
         }
         try {
             if (this._scrollContainer) {
-                this._bounds.removeChild(this._scrollContainer);
+                this._scrollContainer.parentNode.removeChild(this._scrollContainer);
                 this._scrollContainer = undefined;
             }
         }
@@ -467,7 +473,7 @@ var PagePanPinch = (function () {
             var param = this._scrollParams[e];
             var maxScroll = this._scrollRect[param.unit] - this._scrollBounds[param.unit];
             var scrollDistance = this._scrollBounds[param.unit] - this._scrollBarElements[param.element].length;
-            var pos = this._pos[e].current * scrollDistance / maxScroll + this._scrollBounds[param.dir];
+            var pos = this._pos[e].current * scrollDistance / maxScroll;
             this._scrollBarElements[param.element].element.style[param.dir] = pos + "px";
         }
     };

@@ -117,6 +117,10 @@ class PagePanPinch {
     private _isScrolling: boolean = false;
     private _eventScrollWheelTimer: any;
 
+    private _init: boolean = false;
+    private _initInterval: any;
+    private _initScale: boolean = false;
+
     // Hammer Libary
     private _mc: any;
 
@@ -149,24 +153,30 @@ class PagePanPinch {
     }
 
     public init(scale: any): void {
-        let i: any = setInterval(() => {
-            if (this._options.pageHasChildren && !this._page.childNodes.length) {
-                return;
-            }
-            clearInterval(i);
-            i = undefined;
-            this.setupContainers();
-            if (scale) {
-                this.setMaxMinScale();
-            }
-            this.setupScrollbars();
-            this.setupTouch();
-            this.update();
-            if (scale) {
-                this.updateContentScroll();
-            }
-        }, 10);
+        this._init = false;
+        this._initInterval = setInterval(this.initInterval, 10);
+        this._initScale = scale;
+        this.initInterval();
     }
+
+    public initInterval = () => {
+        if (this._options.pageHasChildren && !this._page.childNodes.length) {
+            return;
+        }
+        clearInterval(this._initInterval);
+        this._initInterval = undefined;
+        this.setupContainers();
+        if (this._initScale) {
+            this.setMaxMinScale();
+        }
+        this.setupScrollbars();
+        this.setupTouch();
+        this.update();
+        if (this._initScale) {
+            this.updateContentScroll();
+        }
+        this._init = true;
+    };
 
     public refresh(): void {
         this.destroy();
@@ -213,7 +223,7 @@ class PagePanPinch {
         }
         try {
             if (this._scrollContainer) {
-                this._bounds.removeChild(this._scrollContainer);
+                this._scrollContainer.parentNode.removeChild(this._scrollContainer);
                 this._scrollContainer = undefined;
             }
         } catch (e) {
@@ -584,7 +594,7 @@ class PagePanPinch {
 
             let maxScroll: number = this._scrollRect[param.unit] - this._scrollBounds[param.unit];
             let scrollDistance: number = this._scrollBounds[param.unit] - this._scrollBarElements[param.element].length;
-            let pos: number = this._pos[e].current * scrollDistance / maxScroll + this._scrollBounds[param.dir];
+            let pos: number = this._pos[e].current * scrollDistance / maxScroll; // + this._scrollBounds[param.dir];
 
             // this._scrollBarElements[param.element.parent].element.style[param.dir] = `${pos}px`;
 
