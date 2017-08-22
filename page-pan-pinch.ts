@@ -5,6 +5,7 @@ class PagePanPinch {
     private _options: any = {
         prefix: "ppp",
         bounds: "",
+        contentView: "",
         contentScroll: "",
         contentZoom: "",
         page: "",
@@ -23,6 +24,7 @@ class PagePanPinch {
     };
 
     private _bounds: any;
+    private _contentView: any;
     private _contentScroll: any;
     private _contentZoom: any;
     private _page: any;
@@ -139,12 +141,13 @@ class PagePanPinch {
 
         // dom elements
         this._bounds = typeof this._options.bounds === "string" ? document.getElementById(this._options.bounds) : this._options.bounds;
+        this._contentView = typeof this._options.contentView === "string" ? document.getElementById(this._options.contentView) : this._options.contentView;
         this._contentScroll = typeof this._options.contentScroll === "string" ? document.getElementById(this._options.contentScroll) : this._options.contentScroll;
         this._contentZoom = typeof this._options.contentZoom === "string" ? document.getElementById(this._options.contentZoom) : this._options.contentZoom;
         this._page = typeof this._options.page === "string" ? document.getElementById(this._options.page) : this._options.page;
         this._debug = typeof this._options.debug === "string" ? document.getElementById(this._options.debug) : this._options.debug;
 
-        if (!this._bounds || !this._contentScroll || !this._contentZoom || !this._page) {
+        if (!this._contentView || !this._bounds || !this._contentScroll || !this._contentZoom || !this._page) {
             throw "DOM Elements undefined";
         }
 
@@ -215,8 +218,8 @@ class PagePanPinch {
         try {
             window.removeEventListener("mousemove", this._eventScrollMouseMove, false);
             window.removeEventListener("mouseup", this._eventScrollMouseMove, false);
-            this._bounds.removeEventListener("mousewheel", this._eventScrollWheel, false);
-            this._bounds.removeEventListener("scroll", this._eventScroll, false);
+            this._contentView.removeEventListener("mousewheel", this._eventScrollWheel, false);
+            this._contentView.removeEventListener("scroll", this._eventScroll, false);
             this._scrollEvents = false;
         } catch (e) {
             ;
@@ -238,7 +241,7 @@ class PagePanPinch {
             return;
         }
 
-        this._scrollBounds = this.getBoundingClientRect(this._bounds.getBoundingClientRect());
+        this._scrollBounds = this.getBoundingClientRect(this._contentView.getBoundingClientRect());
         this._scrollRect = this.getBoundingClientRect(this._contentScroll.getBoundingClientRect());
         this._scrollRect.height = this._scrollRect.height * this._scale.current;
         this._scrollRect.width = this._scrollRect.width * this._scale.current;
@@ -309,9 +312,9 @@ class PagePanPinch {
             e.className = this.addClassname(e.className, className);
 
             let offset: number = 0;
-            // if (this._options.scrollBarsInset) {
-            offset = this._options.scrollBarWidth * -1;
-            // }
+            if (this._options.scrollBarsInset) {
+                offset = this._options.scrollBarWidth;
+            }
 
             // set size of handles
             switch (this._scrollBarElements[element].type) {
@@ -333,8 +336,13 @@ class PagePanPinch {
                     break;
                 // bar
                 default:
-                    e.style.left = axis === "x" ? `${(this._scrollBounds.left)}px` : `${(this._scrollBounds.right + offset)}px`;
-                    e.style.top = axis === "x" ? `${(this._scrollBounds.top + this._scrollBounds.height + offset)}px` : `${(this._scrollBounds.top)}px`;
+                    if (axis === "x") {
+                        e.style.left = `${this._contentView.offsetLeft}px`;
+                        e.style.top =  `${(this._contentView.offsetTop + this._scrollBounds.height + offset)}px`;
+                    } else {
+                        e.style.left = `${(this._contentView.offsetLeft + this._scrollBounds.width + offset)}px`;
+                        e.style.top = `${this._contentView.offsetTop}px`;
+                    }
                     e.style.width = axis === "x" ? `${this._scrollBounds.width}px` : `${this._options.scrollBarWidth}px`;
                     e.style.height = axis === "x" ? `${this._options.scrollBarWidth}px` : `${this._scrollBounds.height}px`;
                     break;
@@ -357,13 +365,13 @@ class PagePanPinch {
         // stop drag
         window.addEventListener("mouseup", this._eventScrollMouseUp, false);
         // mouse wheel
-        this._bounds.addEventListener("mousewheel", this._eventScrollWheel, false);
+        this._contentView.addEventListener("mousewheel", this._eventScrollWheel, false);
 
     }
 
     private setupContainers(): void {
-        this._bounds.style.overflow = "hidden";
-        this._bounds.addEventListener("scroll", this._eventScroll, false);
+        this._contentView.style.overflow = "hidden";
+        this._contentView.addEventListener("scroll", this._eventScroll, false);
         this._contentScroll.style.width = `${this._page.clientWidth}px`;
         this._contentScroll.style.height = `${this._page.clientHeight}px`;
         this._contentZoom.style.transformOrigin = "0 0";
@@ -374,7 +382,7 @@ class PagePanPinch {
             this._mc.destroy();
         }
         // touch library
-        this._mc = new Hammer(this._bounds);
+        this._mc = new Hammer(this._contentView);
         // let swipe: any = new Hammer.Swipe();
         let pan: any = new Hammer.Pan();
         let tap: any = new Hammer.Tap({ event: "singletap" });
@@ -409,8 +417,8 @@ class PagePanPinch {
     // catche external trigger
     private _eventScroll = (evt: any) => {
         if (!this._isScrolling) {
-            this._pos.x.current = this._bounds.scrollLeft;
-            this._pos.y.current = this._bounds.scrollTop;
+            this._pos.x.current = this._contentView.scrollLeft;
+            this._pos.y.current = this._contentView.scrollTop;
             this.update();
         }
     };
@@ -430,7 +438,7 @@ class PagePanPinch {
         let scroll: string = `scroll${dir}`;
         this._pos[axis].current += 20 * delta * -1;
         this.update();
-        this._pos[axis].current = this._pos[axis].last = this._bounds[scroll];
+        this._pos[axis].current = this._pos[axis].last = this._contentView[scroll];
         this._eventScrollWheelTimer = setTimeout(() => {
             this._isScrolling = false;
         }, 50);
@@ -562,8 +570,8 @@ class PagePanPinch {
     private update(): any {
 
         this.setWithinBounds();
-        this._bounds.scrollLeft = this._pos.x.current;
-        this._bounds.scrollTop = this._pos.y.current;
+        this._contentView.scrollLeft = this._pos.x.current;
+        this._contentView.scrollTop = this._pos.y.current;
         this._contentZoom.style.transform = this._options.zoomCss ? `translateZ(0px)` : `translateZ(0px) scale(${this._scale.current})`;
         if (this._options.zoomCss) {
             this._contentZoom.style.zoom = `${this._scale.current * 100}%`;
@@ -578,11 +586,11 @@ class PagePanPinch {
             return;
         }
 
-        this._scrollBarElements.trackX.element.style.left = `${(this._bounds.scrollLeft)}px`;
-        this._scrollBarElements.trackX.element.style.top = `${(this._bounds.scrollTop + this._scrollBounds.height - this._options.scrollBarWidth)}px`;
+        // this._scrollBarElements.trackX.element.style.left = `${(this._contentView.scrollLeft)}px`;
+        // this._scrollBarElements.trackX.element.style.top = `${(this._contentView.scrollTop + this._scrollBounds.height - this._options.scrollBarWidth)}px`;
 
-        this._scrollBarElements.trackY.element.style.left = `${(this._bounds.scrollLeft + this._scrollBounds.width - this._options.scrollBarWidth)}px`;
-        this._scrollBarElements.trackY.element.style.top = `${(this._bounds.scrollTop)}px`;
+        // this._scrollBarElements.trackY.element.style.left = `${(this._contentView.scrollLeft + this._scrollBounds.width - this._options.scrollBarWidth)}px`;
+        // this._scrollBarElements.trackY.element.style.top = `${(this._contentView.scrollTop)}px`;
 
         for (let e in this._scrollParams) {
 
@@ -610,8 +618,8 @@ class PagePanPinch {
 
     private setMaxMinScale(scale: boolean): void {
 
-        let scaleWidth: number = this._bounds.clientWidth / this._page.clientWidth;
-        let scaleHeight: number = this._bounds.clientHeight / this._page.clientHeight;
+        let scaleWidth: number = this._contentView.clientWidth / this._page.clientWidth;
+        let scaleHeight: number = this._contentView.clientHeight / this._page.clientHeight;
         let scaleBy: number = (scaleHeight < scaleWidth) ? scaleHeight : scaleWidth;
         if (this._options.zoomFit === "width") {
             scaleBy = scaleWidth;
@@ -649,8 +657,8 @@ class PagePanPinch {
         this._scale.width = pageWidth;
         this._scale.height = pageHeight;
 
-        let maxLeft: number = pageWidth - this._bounds.clientWidth;
-        let maxTop: number = pageHeight - this._bounds.clientHeight;
+        let maxLeft: number = pageWidth - this._contentView.clientWidth;
+        let maxTop: number = pageHeight - this._contentView.clientHeight;
 
         let minLeft: number = 0; // (pageWidth - this._bounds.clientWidth) / 2;
         let minTop: number = 0; // (pageHeight - this._bounds.clientHeight) / 2;
@@ -660,7 +668,7 @@ class PagePanPinch {
         this._pos.y.max = maxTop;
         this._pos.y.min = minTop;
 
-        if (pageWidth > this._bounds.clientWidth) {
+        if (pageWidth > this._contentView.clientWidth) {
             if (this._pos.x.current > maxLeft) {
                 this._pos.x.current = maxLeft;
             } else if (this._pos.x.current < minLeft) {
@@ -670,7 +678,7 @@ class PagePanPinch {
             this._pos.x.current = minLeft;
         }
 
-        if (pageHeight > this._bounds.clientHeight) {
+        if (pageHeight > this._contentView.clientHeight) {
             if (this._pos.y.current > maxTop) {
                 this._pos.y.current = maxTop;
             } else if (this._pos.y.current < minTop) {
@@ -706,11 +714,11 @@ class PagePanPinch {
                     </tr>
                     <tr>
                         <td>bounds height</td>
-                        <td align="right">${this._bounds.clientHeight.toFixed(2)}</td>
+                        <td align="right">${this._contentView.clientHeight.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td>bounds width</td>
-                        <td align="right">${this._bounds.clientWidth.toFixed(2)}</td>
+                        <td align="right">${this._contentView.clientWidth.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td>page height</td>
