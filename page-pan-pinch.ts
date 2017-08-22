@@ -293,6 +293,8 @@ class PagePanPinch {
                     this._scrollBarElements[element].pos.x = parseFloat(this._scrollBarElements[element].element.style.left);
                     this._scrollBarElements[element].pos.y = parseFloat(this._scrollBarElements[element].element.style.top);
                     this._scrollBarElements[element].drag = true;
+                    // this._eventScrollMouseMove(evt);
+                    evt.stopPropagation();
                 } else {
                     this.onClickScrollbar(this._scrollBarElements[element], evt);
                 }
@@ -338,7 +340,7 @@ class PagePanPinch {
                 default:
                     if (axis === "x") {
                         e.style.left = `${this._contentView.offsetLeft}px`;
-                        e.style.top =  `${(this._contentView.offsetTop + this._scrollBounds.height + offset)}px`;
+                        e.style.top = `${(this._contentView.offsetTop + this._scrollBounds.height + offset)}px`;
                     } else {
                         e.style.left = `${(this._contentView.offsetLeft + this._scrollBounds.width + offset)}px`;
                         e.style.top = `${this._contentView.offsetTop}px`;
@@ -406,6 +408,7 @@ class PagePanPinch {
     }
 
     private onClickScrollbar(element: any, evt: any) {
+        console.log('onClickScrollbar', evt);
         let scroller: any = this._scrollBarElements[`scroll${element.axis.toUpperCase()}`];
         let params: any = this._scrollParams[element.axis];
         let scrollerPos: number = parseFloat(scroller.element.style[params.dir]) + scroller.length;
@@ -459,13 +462,35 @@ class PagePanPinch {
                 continue;
             }
 
+            /*
+            scroller = {
+                axis: "y",
+                element: null,
+                type: "scroller",
+                className: "scroll-y",
+                zIndex: 100,
+                drag: false,
+                pos: {
+                    x: left,
+                    y: top,
+                },
+            }
+            paramsAxis = {
+                parent: "trackY",
+                element: "scrollY",
+                pos: "mouseY",
+                unit: "height",
+                dir: "top",
+            },             
+            */
+
             let paramsAxis: any = this._scrollParams[scroller.axis];
 
             let offset: number = evt[scroller.axis] - scroller.pos[paramsAxis.pos];
             let pos: number = scroller.pos[scroller.axis] + offset;
 
-            if (pos < this._scrollBounds[paramsAxis.dir]) {
-                pos = this._scrollBounds[paramsAxis.dir];
+            if (pos < 0) {
+                pos = 0;
             }
 
             let distance: number = parseFloat(scroller.element.style[paramsAxis.unit]);
@@ -476,9 +501,10 @@ class PagePanPinch {
                 pos = maxOffset;
             }
             // scroller.element.style[paramsAxis.dir] = `${pos}px`;
-            let scroll: number = pos - this._scrollBounds[paramsAxis.dir];
+            let scroll: number = pos; // - this._scrollBounds[paramsAxis.dir];
             this._pos[scroller.axis].current = this._pos[scroller.axis].last = scroll * (this._scrollRect[paramsAxis.unit] / this._scrollBounds[paramsAxis.unit]);
             this.update();
+            console.log('mouse', 'pos', pos, 'distance', distance, 'scroll', scroll);
 
         }
     };

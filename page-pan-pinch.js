@@ -161,8 +161,8 @@ var PagePanPinch = (function () {
                 var paramsAxis = _this._scrollParams[scroller.axis];
                 var offset = evt[scroller.axis] - scroller.pos[paramsAxis.pos];
                 var pos = scroller.pos[scroller.axis] + offset;
-                if (pos < _this._scrollBounds[paramsAxis.dir]) {
-                    pos = _this._scrollBounds[paramsAxis.dir];
+                if (pos < 0) {
+                    pos = 0;
                 }
                 var distance = parseFloat(scroller.element.style[paramsAxis.unit]);
                 var distanceRemainder = _this._scrollBounds[paramsAxis.unit] - distance;
@@ -170,9 +170,10 @@ var PagePanPinch = (function () {
                 if (pos > maxOffset) {
                     pos = maxOffset;
                 }
-                var scroll_1 = pos - _this._scrollBounds[paramsAxis.dir];
+                var scroll_1 = pos;
                 _this._pos[scroller.axis].current = _this._pos[scroller.axis].last = scroll_1 * (_this._scrollRect[paramsAxis.unit] / _this._scrollBounds[paramsAxis.unit]);
                 _this.update();
+                console.log('mouse', 'pos', pos, 'distance', distance, 'scroll', scroll_1);
             }
         };
         this._eventScrollMouseUp = function (evt) {
@@ -343,6 +344,7 @@ var PagePanPinch = (function () {
                     _this._scrollBarElements[element].pos.x = parseFloat(_this._scrollBarElements[element].element.style.left);
                     _this._scrollBarElements[element].pos.y = parseFloat(_this._scrollBarElements[element].element.style.top);
                     _this._scrollBarElements[element].drag = true;
+                    evt.stopPropagation();
                 }
                 else {
                     _this.onClickScrollbar(_this._scrollBarElements[element], evt);
@@ -434,6 +436,7 @@ var PagePanPinch = (function () {
         }
     };
     PagePanPinch.prototype.onClickScrollbar = function (element, evt) {
+        console.log('onClickScrollbar', evt);
         var scroller = this._scrollBarElements["scroll" + element.axis.toUpperCase()];
         var params = this._scrollParams[element.axis];
         var scrollerPos = parseFloat(scroller.element.style[params.dir]) + scroller.length;
