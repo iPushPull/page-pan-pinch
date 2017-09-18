@@ -576,3 +576,5 @@ var PagePanPinch = (function () {
     };
     return PagePanPinch;
 }());
+module.exports = PagePanPinch;
+module.exports.defaults = PagePanPinch;
