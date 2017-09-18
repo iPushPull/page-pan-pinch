@@ -786,14 +786,8 @@ class PagePanPinch {
 
 }
 
-function createInstance(config) {
+let pagepanpinch: any = function(config) {
     return new PagePanPinch(config);
-}
-
-let pagepanpinch = {};
-pagepanpinch.PagePanPinch = PagePanPinch;
-pagepanpinch.create = function (config) {
-    return createInstance(config);
 };
 
 module.exports = pagepanpinch;

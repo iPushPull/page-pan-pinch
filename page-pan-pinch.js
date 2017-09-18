@@ -576,13 +576,8 @@ var PagePanPinch = (function () {
     };
     return PagePanPinch;
 }());
-function createInstance(config) {
+var pagepanpinch = function (config) {
     return new PagePanPinch(config);
-}
-var pagepanpinch = {};
-pagepanpinch.PagePanPinch = PagePanPinch;
-pagepanpinch.create = function (config) {
-    return createInstance(config);
 };
 module.exports = pagepanpinch;
 module.exports.defaults = pagepanpinch;
