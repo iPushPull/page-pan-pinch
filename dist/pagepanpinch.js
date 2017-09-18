@@ -668,4 +668,4 @@ module.exports.defaults = PagePanPinch;
 /***/ })
 /******/ ]);
 });
-//# sourceMappingURL=page-pan-pinch.map
+//# sourceMappingURL=pagepanpinch.map

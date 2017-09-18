@@ -37,7 +37,7 @@ function generateConfig(name) {
   return config;
 }
 
-['page-pan-pinch', 'page-pan-pinch.min'].forEach(function (key) {
+['pagepanpinch', 'pagepanpinch.min'].forEach(function (key) {
   config[key] = generateConfig(key);
 });
 
