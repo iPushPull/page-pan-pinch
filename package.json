@@ -1,5 +1,5 @@
 {
-  "name": "page-pan-pinch",
+  "name": "pagepanpinch",
   "version": "1.0.0",
   "description": "Simple library to zoom and pan",
   "main": "index.js",
