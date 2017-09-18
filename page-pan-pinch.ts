@@ -786,3 +786,5 @@ class PagePanPinch {
 
 }
 
+module.exports = PagePanPinch;
+module.exports.defaults = PagePanPinch;
