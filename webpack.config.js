@@ -9,7 +9,7 @@ function generateConfig(name) {
       path: __dirname + '/dist/',
       filename: name + '.js',
       sourceMapFilename: name + '.map',
-      library: 'ipushpull',
+      library: 'pagepanpinch',
       libraryTarget: 'umd'
     },
     node: {
