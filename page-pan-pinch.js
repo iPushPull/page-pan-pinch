@@ -304,6 +304,9 @@ var PagePanPinch = (function () {
             ;
         }
     };
+    PagePanPinch.prototype.getScale = function () {
+        return this._scale.current;
+    };
     PagePanPinch.prototype.setupScrollbars = function () {
         var _this = this;
         this._scrollBars = false;

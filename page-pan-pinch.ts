@@ -234,6 +234,10 @@ class PagePanPinch {
         }
     }
 
+    public getScale(): number {
+        return this._scale.current;
+    }
+
     private setupScrollbars(): void {
 
         this._scrollBars = false;
