@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/iPushPull/page-pan-pinch/issues"
   },
-  "homepage": "https://github.com/iPushPull/page-pan-pinch#readme"
+  "homepage": "https://github.com/iPushPull/page-pan-pinch#readme",
+  "dependencies": {
+    "uglify": "^0.1.5"
+  }
 }
